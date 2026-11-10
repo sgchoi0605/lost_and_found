@@ -1,0 +1,10 @@
+{
+  "description": "Streamlines lost and found management by enabling users to report, search, and match items while empowering admins to oversee and process claims efficiently.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

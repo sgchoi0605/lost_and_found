@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로그인 | LOST & FOUND</title>
+    <link rel="icon" href="../../../public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+  <link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/account.css"></head>
+  <body class="form-page">
+    <header class="simple-header">
+      <a class="logo-wrap" href="../../discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>다시 만나는 가장 따뜻한 방법</small></span>
+      </a>
+      <a class="back-link" href="../../discovery/frontend/index.html">← 홈으로 돌아가기</a>
+    </header>
+    <main class="form-page-main">
+      <section class="form-card auth-card">
+        <span class="eyebrow">WELCOME BACK</span>
+        <h1>로그인</h1>
+        <p>신고 내역과 매칭 결과를 안전하게 확인하세요.</p>
+        <form id="loginForm">
+          <label class="field"><span>아이디</span><input name="userId" autocomplete="username" placeholder="아이디를 입력하세요" required /></label>
+          <label class="field"><span>비밀번호</span><input name="password" type="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요" required /></label>
+          <div class="login-help"><button type="button">아이디 찾기</button><span></span><button type="button">비밀번호 재설정</button></div>
+          <button class="btn btn-primary full" type="submit">로그인</button>
+        </form>
+        <div class="signup-note"><span>아직 계정이 없으신가요?</span><button type="button">회원가입</button></div>
+      </section>
+    </main>
+    <script type="module" src="./js/login.js"></script>
+  </body>
+</html>

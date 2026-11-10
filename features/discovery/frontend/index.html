@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="동작구 분실물·습득물 통합 안내 서비스" />
+    <title>LOST & FOUND | 동작구 분실물 안내</title>
+    <link rel="icon" href="../../../public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+  <link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/discovery.css"></head>
+  <body>
+    <header class="topbar">
+      <a class="logo-wrap" href="../../discovery/frontend/index.html" aria-label="홈으로 이동">
+        <span class="logo-mark">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+        </span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>다시 만나는 가장 따뜻한 방법</small></span>
+      </a>
+      <div class="header-actions">
+        <button class="icon-button notification-button" id="notificationButton" aria-label="알림 보기">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          <span class="notification-dot"></span>
+        </button>
+        <a class="btn btn-secondary" href="../../account/frontend/login.html" id="loginLink">로그인</a>
+        <a class="btn btn-primary header-report" href="../../reports/frontend/lost-report.html">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          분실 신고
+        </a>
+      </div>
+    </header>
+
+    <main class="user-main">
+      <section class="welcome">
+        <div>
+          <span class="eyebrow">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            동작구 분실물 통합 안내
+          </span>
+          <h1>동작구에서 잃어버렸다면,<br /><em>여기서 바로 찾아보세요.</em></h1>
+          <p>노량진동부터 사당동까지, 동작구에 접수된 분실물과 습득물을 한곳에서 확인할 수 있어요.</p>
+          <form class="hero-search" id="searchForm">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+              <input id="searchInput" type="search" placeholder="어떤 물건을 잃어버리셨나요?" aria-label="분실물 검색" />
+              <span class="search-place">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                동작구 전역
+              </span>
+              <button class="btn btn-primary" type="submit">검색하기</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <div class="section-heading matching-heading">
+        <div><span class="eyebrow">스마트 매칭</span><h2>혹시 이 물건인가요?</h2></div>
+      </div>
+      <section class="content-grid">
+        <div class="main-column">
+          <article class="match-card">
+            <div class="comparison">
+              <div class="photo-panel">
+                <div class="photo-label">내가 잃어버린 물건</div>
+                <img src="./assets/wallet-lost.jpg" alt="사용자가 등록한 브라운 카드 지갑" />
+                <div class="photo-meta"><b>브라운 카드 지갑</b><span>노량진역 · 오늘 14:30</span></div>
+              </div>
+              <div class="match-link" aria-hidden="true"><span>↔</span></div>
+              <div class="photo-panel found">
+                <div class="photo-label">새로 발견된 습득물</div>
+                <img src="./assets/wallet-found.jpg" alt="시스템이 찾은 브라운 반지갑" />
+                <div class="photo-meta"><b>브라운 반지갑</b><span>노량진역 대합실 · 오늘 15:05</span></div>
+              </div>
+            </div>
+            <div class="match-factors">
+              <span>✓ 카테고리 일치</span><span>✓ 350m 이내</span><span>✓ 색상·재질 유사</span><span>✓ 35분 차이</span>
+              <button class="btn btn-primary" data-toast="인계 신청이 접수되었습니다.">내 물건이 맞아요 · 인계 신청</button>
+            </div>
+          </article>
+
+          <div class="section-heading compact">
+            <div><h2>동작구 최근 습득물</h2><p>동작구 안에서 보관 중인 물건이에요.</p></div>
+          </div>
+          <div class="found-grid" id="foundGrid">
+            <article class="found-card" data-name="브라운 반지갑 지갑">
+              <div class="item-illustration clay"><span class="item-symbol">▣</span><span>지갑</span></div>
+              <div class="found-info"><span class="status status-received">보관 중</span><b>브라운 반지갑</b><span>노량진역</span><span>오늘 습득</span></div>
+            </article>
+            <article class="found-card" data-name="무선 이어폰 케이스 전자기기">
+              <div class="item-illustration sage"><span class="item-symbol">◉</span><span>전자기기</span></div>
+              <div class="found-info"><span class="status status-received">보관 중</span><b>무선 이어폰 케이스</b><span>보라매공원</span><span>어제 습득</span></div>
+            </article>
+            <article class="found-card" data-name="실버 키링 열쇠">
+              <div class="item-illustration sand"><span class="item-symbol">◇</span><span>열쇠</span></div>
+              <div class="found-info"><span class="status status-received">보관 중</span><b>실버 키링 열쇠</b><span>이수역</span><span>5월 18일</span></div>
+            </article>
+          </div>
+          <div class="empty-state" id="emptyState" hidden>검색 조건에 맞는 습득물이 아직 없어요.</div>
+        </div>
+
+        <aside class="side-column">
+          <article class="quick-report">
+            <span class="quick-icon">＋</span>
+            <h3>물건을 잃어버리셨나요?</h3>
+            <p>기억나는 정보를 간단히 등록하면<br />습득물과 바로 비교해 드려요.</p>
+            <a class="btn full" href="../../reports/frontend/lost-report.html">새 분실물 등록 →</a>
+          </article>
+          <article class="my-reports">
+            <div class="card-heading"><h3>내 신고 내역</h3></div>
+            <div class="report-list">
+              <div class="report-row"><span class="report-icon ready">▣</span><span class="report-copy"><b>브라운 카드 지갑</b><small>노량진역 3번 출구 · 오늘</small><span class="status status-ready">인계 신청 가능</span></span></div>
+              <div class="report-row"><span class="report-icon matching">◉</span><span class="report-copy"><b>화이트 무선 이어폰</b><small>보라매공원 · 5월 18일</small><span class="status status-matching">매칭 진행중</span></span></div>
+              <div class="report-row"><span class="report-icon received">▱</span><span class="report-copy"><b>사원증</b><small>동작구청 인근 · 5월 12일</small><span class="status status-received">접수 완료</span></span></div>
+            </div>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div>
+        <a class="logo-wrap" href="../../discovery/frontend/index.html">
+          <span class="logo-mark">⌖</span>
+          <span><strong>LOST <i>&</i> FOUND</strong></span>
+        </a>
+        <p>동작구에서 잃어버린 물건을 더 쉽고 안전하게 찾을 수 있도록 도와드려요.</p>
+      </div>
+      <div class="footer-contact">
+        <span>문의 안내</span>
+        <a href="tel:02-820-8282">02-820-8282</a>
+        <a href="mailto:lostfound@ssu.ac.kr">lostfound@ssu.ac.kr</a>
+      </div>
+    </footer>
+
+    <div class="drawer-backdrop" id="notificationDrawer" hidden>
+      <aside class="notification-drawer">
+        <div class="drawer-head"><div><span class="eyebrow">NOTIFICATIONS</span><h2>알림 센터</h2></div><button class="icon-button" data-close-drawer aria-label="닫기">×</button></div>
+        <button class="notification-item unread"><span class="notif-icon sage">◇</span><span><b>새로운 매칭 결과가 있습니다</b><p>브라운 카드 지갑과 유사한 습득물이 발견됐어요.</p><small>방금 전</small></span></button>
+        <button class="notification-item"><span class="notif-icon clay">✓</span><span><b>인계 승인이 완료되었습니다</b><p>노량진역 고객안내소에서 수령할 수 있어요.</p><small>어제</small></span></button>
+      </aside>
+    </div>
+    <div class="toast" id="toast" hidden></div>
+    <script type="module" src="./js/index.js"></script>
+  </body>
+</html>

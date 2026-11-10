@@ -1,0 +1,33 @@
+:root {
+  font-family: Arial, "Malgun Gothic", sans-serif;
+  color: #30322f;
+  background: #f9f8f6;
+  font-synthesis: none;
+  --cream: #f9f8f6;
+  --paper: #fffefa;
+  --sage: #71816e;
+  --sage-dark: #536450;
+  --sage-soft: #e9eee6;
+  --clay: #b8775f;
+  --clay-soft: #f6e9e1;
+  --brown: #765746;
+  --brown-dark: #543d32;
+  --brown-soft: #eee4dc;
+  --sand: #d7bd8c;
+  --sand-soft: #f5efe3;
+  --ink: #30322f;
+  --muted: #777a73;
+  --line: #e9e5de;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--cream); }
+button, input, select, textarea { font: inherit; }
+button { color: inherit; }
+a { color: inherit; }
+svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(113,129,110,.25); outline-offset: 2px; }
+.app { min-height: 100vh; }
+
+
