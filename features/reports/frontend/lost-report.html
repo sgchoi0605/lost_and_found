@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
   <head>
+    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>분실물 등록 | LOST & FOUND</title>
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
   <link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/reports.css"></head>
   <body class="form-page">
+    <!-- 화면 이동 링크는 Vite와 Express에서 모두 열리는 루트 기준 경로를 사용합니다. -->
     <header class="simple-header">
       <a class="logo-wrap" href="/features/discovery/frontend/index.html">
         <span class="logo-mark">⌖</span>
@@ -15,6 +17,7 @@
       </a>
       <a class="back-link" href="/features/discovery/frontend/index.html">← 홈으로 돌아가기</a>
     </header>
+    <!-- 화면 본문입니다. 현재 입력·검색은 데모이며 서버 인증이나 저장은 연결되지 않았습니다. -->
     <main class="form-page-main">
       <section class="form-card report-form-card">
         <span class="eyebrow">LOST REPORT</span>
@@ -38,6 +41,7 @@
         </form>
       </section>
     </main>
+    <!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
     <script type="module" src="./js/lost-report.js"></script>
   </body>
 </html>

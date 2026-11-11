@@ -1,8 +1,10 @@
+// Node 기본 테스트 도구로 실제 HTTP 요청을 보내 서버 동작을 확인합니다.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readdir } from 'node:fs/promises';
 import { app } from './server.js';
 
+// 빈 포트를 자동 배정받아 테스트용 서버를 열고, 검증이 끝나면 닫습니다.
 let server;
 let base;
 before(async () => {
@@ -14,12 +16,14 @@ before(async () => {
 });
 after(() => new Promise(resolve => server.close(resolve)));
 
+// 첫 접속 시 메인 화면으로 이동하는지 확인합니다.
 test('root redirects to the discovery page', async () => {
   const response = await fetch(base, { redirect: 'manual' });
   assert.equal(response.status, 302);
   assert.equal(response.headers.get('location'), '/discovery/index.html');
 });
 
+// 모든 화면을 두 URL 형식으로 열고 CSS·이미지·화면 링크·JS 연결을 점검합니다.
 test('all pages, local assets, navigation and module imports resolve on short and legacy URLs', async () => {
   for (const feature of ['account', 'reports', 'discovery', 'operations']) {
     const files = await readdir(new URL(`../../features/${feature}/frontend/`, import.meta.url));
@@ -35,6 +39,7 @@ test('all pages, local assets, navigation and module imports resolve on short an
           if (asset.origin !== base) continue;
           const result = await fetch(asset);
           assert.equal(result.status, 200, asset.href);
+          // HTML이 불러오는 JS뿐 아니라 그 JS가 import하는 공통 모듈도 확인합니다.
           if (asset.pathname.endsWith('.js')) {
             assert.match(result.headers.get('content-type'), /javascript/);
             for (const [, dependency] of (await result.text()).matchAll(/import\s+["']([^"']+)["']/g)) {
@@ -49,6 +54,7 @@ test('all pages, local assets, navigation and module imports resolve on short an
   assert.equal((await fetch(`${base}/shared/css/base.css`)).status, 200);
 });
 
+// 네 기능의 라우터 연결을 확인하고, 미구현 로그인이 성공으로 응답하지 않는지 검사합니다.
 test('four API routers expose connection checks only', async () => {
   for (const feature of ['account', 'reports', 'discovery', 'operations']) {
     const response = await fetch(`${base}/api/${feature}/health`);
@@ -58,6 +64,7 @@ test('four API routers expose connection checks only', async () => {
   assert.equal((await fetch(`${base}/api/account/login`, { method: 'POST' })).status, 404);
 });
 
+// 비공개 파일이나 상위 폴더로 벗어나려는 요청에 파일 내용이 노출되지 않는지 확인합니다.
 test('private files and traversal requests are not served', async () => {
   for (const path of [
     '/.env', '/.env.example', '/.git/config', '/package.json', '/pnpm-lock.yaml',
@@ -73,6 +80,7 @@ test('private files and traversal requests are not served', async () => {
   }
 });
 
+// 잘못된 JSON을 보내면 내부 실행 정보 대신 정해진 오류 응답을 받는지 검사합니다.
 test('malformed JSON returns a safe error without a stack trace', async () => {
   const response = await fetch(`${base}/api/account/health`, {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: '{',

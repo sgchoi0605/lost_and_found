@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
   <head>
+    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="동작구 분실물·습득물 통합 안내 서비스" />
@@ -9,6 +10,7 @@
     <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
   <link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/discovery.css"></head>
   <body>
+    <!-- 화면 이동 링크는 Vite와 Express에서 모두 열리는 루트 기준 경로를 사용합니다. -->
     <header class="topbar">
       <a class="logo-wrap" href="/features/discovery/frontend/index.html" aria-label="홈으로 이동">
         <span class="logo-mark">
@@ -29,6 +31,7 @@
       </div>
     </header>
 
+    <!-- 화면 본문입니다. 현재 입력·검색은 데모이며 서버 인증이나 저장은 연결되지 않았습니다. -->
     <main class="user-main">
       <section class="welcome">
         <div>
@@ -139,6 +142,7 @@
       </aside>
     </div>
     <div class="toast" id="toast" hidden></div>
+    <!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
     <script type="module" src="./js/index.js"></script>
   </body>
 </html>
