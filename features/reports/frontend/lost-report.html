@@ -20,7 +20,7 @@
         <span class="eyebrow">LOST REPORT</span>
         <h1>새 분실물 등록</h1>
         <p>기억나는 만큼 알려주시면 동작구에 접수된 습득물과 비교해 드려요.</p>
-        <form id="reportForm">
+        <form id="reportForm" data-unimplemented="B:5" novalidate>
           <label class="upload-zone" for="itemPhoto">
             <span class="upload-symbol">↑</span>
             <b>물건 사진을 올려주세요</b>
@@ -34,7 +34,7 @@
             <label class="field"><span>분실 날짜</span><input name="date" type="date" required /></label>
             <label class="field wide"><span>특징</span><textarea name="details" placeholder="색상, 브랜드, 흠집 등 물건의 특징을 적어주세요."></textarea></label>
           </div>
-          <div class="form-actions"><a class="btn btn-secondary" href="../../discovery/frontend/index.html">취소</a><button class="btn btn-primary" type="submit">신고 등록하기</button></div>
+          <div class="form-actions"><a class="btn btn-secondary" href="../../discovery/frontend/index.html">취소</a><button class="btn btn-primary" type="submit" data-unimplemented="B:5">신고 등록하기</button></div>
         </form>
       </section>
     </main>
