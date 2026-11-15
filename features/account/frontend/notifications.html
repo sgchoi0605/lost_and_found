@@ -1,6 +1,37 @@
 <!doctype html>
-<html lang="ko"><head>
-    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. --><meta charset="UTF-8"><title>notifications</title><link rel="stylesheet" href="../../../shared/frontend/css/base.css"><link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/account.css"></head><body>
-<!-- 담당 기능을 구현할 자리입니다. 메인 링크로 기존 화면에 돌아갈 수 있습니다. -->
-<main class="form-card"><h1>notifications</h1><p>account 담당 화면 — 구현 예정</p><a href="/features/discovery/frontend/index.html">메인</a></main><!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
-    <script type="module" src="./js/notifications.js"></script></body></html>
+<html lang="ko">
+  <head>
+    <!-- 내 알림 화면의 제목·공통 스타일·전용 스타일입니다. -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>내 알림 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/account.css" />
+  </head>
+  <body>
+    <!-- 공통 JS가 로그인 상태에 맞는 메뉴를 이곳에 만듭니다. -->
+    <header class="account-header" data-account-layout></header>
+    <!-- 본문 입력·조회·버튼 동작은 아래 JS 모듈에서 처리합니다. -->
+    <main class="account-main" hidden>
+      <span class="eyebrow">NOTIFICATIONS</span>
+      <h1>내 알림</h1>
+      <p>유사 물품과 인계 진행 소식을 확인하세요.</p>
+      <p id="message" role="status" aria-live="polite" hidden></p>
+      <div class="account-toolbar">
+        <strong id="unreadCount">알림 불러오는 중…</strong>
+        <button id="readAll" type="button" class="btn btn-secondary">모두 읽음</button>
+        <button id="retry" type="button" class="btn btn-secondary">새로고침</button>
+      </div>
+      <ul id="notifications" class="account-list"></ul>
+      <nav class="account-pagination" aria-label="알림 페이지">
+        <button id="prev" type="button" class="btn btn-secondary">이전</button>
+        <span id="page"></span>
+        <button id="next" type="button" class="btn btn-secondary">다음</button>
+      </nav>
+    </main>
+    <!-- type="module"로 공통 함수를 import할 수 있게 합니다. -->
+    <script type="module" src="./js/notifications.js"></script>
+  </body>
+</html>

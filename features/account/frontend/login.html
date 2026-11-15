@@ -1,38 +1,49 @@
 <!doctype html>
 <html lang="ko">
   <head>
-    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. -->
+    <!-- 로그인 화면의 제목·공통 스타일·전용 스타일입니다. -->
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>로그인 | LOST & FOUND</title>
-    <link rel="icon" href="../../../public/favicon.svg" />
+    <link rel="icon" href="/public/favicon.svg" />
     <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
-  <link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/account.css"></head>
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/account.css" />
+  </head>
   <body class="form-page">
-    <!-- 화면 이동 링크는 Vite와 Express에서 모두 열리는 루트 기준 경로를 사용합니다. -->
-    <header class="simple-header">
-      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
-        <span class="logo-mark">⌖</span>
-        <span><strong>LOST <i>&</i> FOUND</strong><small>다시 만나는 가장 따뜻한 방법</small></span>
-      </a>
-      <a class="back-link" href="/features/discovery/frontend/index.html">← 홈으로 돌아가기</a>
-    </header>
-    <!-- 화면 본문입니다. 현재 입력·검색은 데모이며 서버 인증이나 저장은 연결되지 않았습니다. -->
+    <!-- 공통 JS가 로그인 상태에 맞는 메뉴를 이곳에 만듭니다. -->
+    <header class="account-header" data-account-layout></header>
+    <!-- 본문 입력·조회·버튼 동작은 아래 JS 모듈에서 처리합니다. -->
     <main class="form-page-main">
       <section class="form-card auth-card">
         <span class="eyebrow">WELCOME BACK</span>
         <h1>로그인</h1>
-        <p>신고 내역과 매칭 결과를 안전하게 확인하세요.</p>
-        <form id="loginForm" data-unimplemented="A:1" novalidate>
-          <label class="field"><span>아이디</span><input name="userId" autocomplete="username" placeholder="아이디를 입력하세요" required /></label>
-          <label class="field"><span>비밀번호</span><input name="password" type="password" autocomplete="current-password" placeholder="비밀번호를 입력하세요" required /></label>
-          <div class="login-help"><button type="button" data-unimplemented="A:2">아이디 찾기</button><span></span><button type="button" data-unimplemented="A:3">비밀번호 재설정</button></div>
-          <button class="btn btn-primary full" type="submit" data-unimplemented="A:1">로그인</button>
+        <p>내 신고와 알림을 확인하세요.</p>
+        <p id="message" role="status" aria-live="polite" hidden></p>
+        <form id="loginForm">
+          <label class="field">
+            <span>아이디</span>
+            <input name="loginId" autocomplete="username" maxlength="30" required />
+          </label>
+          <label class="field">
+            <span>비밀번호</span>
+            <input
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              maxlength="128"
+              required
+            />
+          </label>
+          <button class="btn btn-primary full" type="submit">로그인</button>
         </form>
-        <div class="signup-note"><span>아직 계정이 없으신가요?</span><button type="button" data-unimplemented="A:4">회원가입</button></div>
+        <p class="account-note">
+          계정이 없으신가요?
+          <a href="./signup.html">회원가입</a>
+        </p>
       </section>
     </main>
-    <!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
+    <!-- type="module"로 공통 함수를 import할 수 있게 합니다. -->
     <script type="module" src="./js/login.js"></script>
   </body>
 </html>

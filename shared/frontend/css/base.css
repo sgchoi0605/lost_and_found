@@ -1,5 +1,6 @@
+/* 전체 화면에서 공유할 색상 변수와 기본 글꼴 */
 :root {
-  font-family: Arial, "Malgun Gothic", sans-serif;
+  font-family: Arial, 'Malgun Gothic', sans-serif;
   color: #30322f;
   background: #f9f8f6;
   font-synthesis: none;
@@ -20,14 +21,47 @@
   --line: #e9e5de;
 }
 
-* { box-sizing: border-box; }
-[hidden] { display: none !important; }
-body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--cream); }
-button, input, select, textarea { font: inherit; }
-button { color: inherit; }
-a { color: inherit; }
-svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(113,129,110,.25); outline-offset: 2px; }
-.app { min-height: 100vh; }
-
-
+/* 요소 크기 계산과 기본 입력·버튼 모양 통일 */
+* {
+  box-sizing: border-box;
+}
+[hidden] {
+  display: none !important;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--cream);
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  color: inherit;
+}
+a {
+  color: inherit;
+}
+svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(113, 129, 110, 0.25);
+  outline-offset: 2px;
+}
+.app {
+  min-height: 100vh;
+}

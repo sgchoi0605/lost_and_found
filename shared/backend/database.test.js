@@ -1,3 +1,5 @@
+// [A] 임시 DB에서 테이블 생성·데이터 보존·잘못된 데이터 차단을 검사합니다.
+
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -13,6 +15,8 @@ function fixture(t) {
   initializeDatabase(db);
   return db;
 }
+
+// 외래 키 관계를 시험할 사용자와 분실·습득 신고 예시를 테스트 DB에만 넣습니다.
 function seed(db) {
   db.exec(`
     INSERT INTO users (user_id, login_id, email, password_hash, name) VALUES
@@ -34,17 +38,32 @@ function temporaryDirectory(t) {
   return directory;
 }
 
-test('creates the eight role-document tables and enables foreign keys', t => {
+// 테이블 9개와 외래 키 검사·DB 버전이 준비됐는지 확인합니다.
+test('creates eight business tables plus sessions and enables foreign keys', (t) => {
   const db = fixture(t);
-  const tables = db.prepare("SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name").all().map(row => row.name);
-  assert.deepEqual(tables, ['audit_logs', 'handover_requests', 'matches', 'notifications', 'report_photos', 'reports', 'storage_records', 'users']);
+  const tables = db
+    .prepare("SELECT name FROM sqlite_schema WHERE type = 'table' ORDER BY name")
+    .all()
+    .map((row) => row.name);
+  assert.deepEqual(tables, [
+    'audit_logs',
+    'handover_requests',
+    'matches',
+    'notifications',
+    'report_photos',
+    'reports',
+    'sessions',
+    'storage_records',
+    'users',
+  ]);
   assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 1);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
   assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
 });
 
-test('persists linked records and preserves them across repeated initialization', t => {
+// 서로 연결된 데이터를 저장한 후 다시 초기화해도 기존 행이 보존되는지 확인합니다.
+test('persists linked records and preserves them across repeated initialization', (t) => {
   const filename = join(temporaryDirectory(t), 'nested', 'test.db');
   let db = openDatabase(filename);
   try {
@@ -62,20 +81,33 @@ test('persists linked records and preserves them across repeated initialization'
       INSERT INTO audit_logs (actor_id, target_type, target_id, action, detail_json)
         VALUES (1, 'REPORT', 1, 'CREATE', '{"test":true}');
     `);
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
   db = openDatabase(filename);
   try {
     initializeDatabase(db);
     initializeDatabase(db);
-    for (const table of ['users', 'report_photos', 'matches', 'handover_requests', 'storage_records', 'notifications', 'audit_logs']) {
+    for (const table of [
+      'users',
+      'report_photos',
+      'matches',
+      'handover_requests',
+      'storage_records',
+      'notifications',
+      'audit_logs',
+    ]) {
       assert.equal(db.prepare(`SELECT count(*) AS count FROM ${table}`).get().count, 1, table);
     }
     assert.equal(db.prepare('SELECT count(*) AS count FROM reports').get().count, 2);
     assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
-  } finally { db.close(); }
+  } finally {
+    db.close();
+  }
 });
 
-test('rejects orphan references, duplicate accounts, invalid states and invalid JSON', t => {
+// 없는 사용자 참조·중복 계정·잘못된 상태·깨진 JSON을 DB가 거부하는지 확인합니다.
+test('rejects orphan references, duplicate accounts, invalid states and invalid JSON', (t) => {
   const db = fixture(t);
   seed(db);
   for (const sql of [
@@ -84,69 +116,107 @@ test('rejects orphan references, duplicate accounts, invalid states and invalid 
     "INSERT INTO users (login_id, email, password_hash, name) VALUES ('test-user', 'other@example.invalid', 'hash', 'test')",
     "INSERT INTO users (login_id, email, password_hash, name) VALUES ('other', 'TEST@example.invalid', 'hash', 'test')",
     "UPDATE users SET role = 'ROOT' WHERE user_id = 1",
-    "UPDATE users SET report_blocked = 2 WHERE user_id = 1",
+    'UPDATE users SET report_blocked = 2 WHERE user_id = 1',
     "UPDATE reports SET status = 'UNKNOWN' WHERE report_id = 1",
     "INSERT INTO audit_logs (target_type, target_id, action, detail_json) VALUES ('REPORT', 1, 'UPDATE', 'invalid json')",
-    "DELETE FROM users WHERE user_id = 1",
-  ]) assert.throws(() => db.exec(sql), /constraint/i, sql);
+    'DELETE FROM users WHERE user_id = 1',
+  ]) {
+    assert.throws(() => db.exec(sql), /constraint/i, sql);
+  }
 });
 
-test('validates matching direction, unique pairs and similarity range', t => {
+// 분실·습득 매칭 방향과 중복 쌍·점수 범위 제약을 확인합니다.
+test('validates matching direction, unique pairs and similarity range', (t) => {
   const db = fixture(t);
   seed(db);
-  assert.throws(() => db.exec('INSERT INTO matches (lost_report_id, found_report_id) VALUES (2, 1)'), /LOST and FOUND/);
-  assert.throws(() => db.exec('INSERT INTO matches (lost_report_id, found_report_id, similarity) VALUES (1, 2, 1.1)'), /constraint/i);
+  assert.throws(
+    () => db.exec('INSERT INTO matches (lost_report_id, found_report_id) VALUES (2, 1)'),
+    /LOST and FOUND/,
+  );
+  assert.throws(
+    () =>
+      db.exec(
+        'INSERT INTO matches (lost_report_id, found_report_id, similarity) VALUES (1, 2, 1.1)',
+      ),
+    /constraint/i,
+  );
   db.exec('INSERT INTO matches (lost_report_id, found_report_id) VALUES (1, 2)');
-  assert.throws(() => db.exec('INSERT INTO matches (lost_report_id, found_report_id) VALUES (1, 2)'), /UNIQUE/);
+  assert.throws(
+    () => db.exec('INSERT INTO matches (lost_report_id, found_report_id) VALUES (1, 2)'),
+    /UNIQUE/,
+  );
   assert.throws(() => db.exec('UPDATE matches SET lost_report_id = 2'), /LOST and FOUND/);
-  assert.throws(() => db.exec("UPDATE reports SET report_type = 'FOUND' WHERE report_id = 1"), /cannot be changed/);
+  assert.throws(
+    () => db.exec("UPDATE reports SET report_type = 'FOUND' WHERE report_id = 1"),
+    /cannot be changed/,
+  );
 });
 
-test('validates handover and storage report types on insert and update', t => {
+// 인계·보관 대상에는 올바른 종류의 신고만 연결할 수 있는지 확인합니다.
+test('validates handover and storage report types on insert and update', (t) => {
   const db = fixture(t);
   seed(db);
-  const request = db.prepare('INSERT INTO handover_requests (found_report_id, requester_id, lost_report_id, ownership_proof) VALUES (?, 1, ?, ?)');
+  const request = db.prepare(
+    'INSERT INTO handover_requests (found_report_id, requester_id, lost_report_id, ownership_proof) VALUES (?, 1, ?, ?)',
+  );
   assert.throws(() => request.run(1, null, '증빙'), /FOUND/);
   assert.throws(() => request.run(2, 2, '증빙'), /LOST/);
   request.run(2, null, '분실 신고 없이도 신청 가능');
   assert.throws(() => db.exec('UPDATE handover_requests SET found_report_id = 1'), /FOUND/);
   assert.throws(() => db.exec('UPDATE handover_requests SET lost_report_id = 2'), /LOST/);
-  const storage = db.prepare('INSERT INTO storage_records (found_report_id, storage_place, stored_at, storage_deadline) VALUES (?, ?, ?, ?)');
+  const storage = db.prepare(
+    'INSERT INTO storage_records (found_report_id, storage_place, stored_at, storage_deadline) VALUES (?, ?, ?, ?)',
+  );
   assert.throws(() => storage.run(1, '안내실', '2026-11-12', '2026-12-12'), /FOUND/);
   storage.run(2, '안내실', '2026-11-12', '2026-12-12');
   assert.throws(() => db.exec('UPDATE storage_records SET found_report_id = 1'), /FOUND/);
 });
 
-test('approval is distinct from completion and completion requires recipient and time', t => {
+// 승인과 완료는 별개이며, 인계 완료에는 수령인과 완료 시각이 필요한지 확인합니다.
+test('approval is distinct from completion and completion requires recipient and time', (t) => {
   const db = fixture(t);
   seed(db);
-  db.exec("INSERT INTO handover_requests (found_report_id, requester_id, ownership_proof) VALUES (2, 1, '증빙')");
+  db.exec(
+    "INSERT INTO handover_requests (found_report_id, requester_id, ownership_proof) VALUES (2, 1, '증빙')",
+  );
   db.exec("UPDATE handover_requests SET status = 'APPROVED'");
   assert.equal(db.prepare('SELECT completed_at FROM handover_requests').get().completed_at, null);
-  assert.equal(db.prepare('SELECT status FROM reports WHERE report_id = 2').get().status, 'REPORTED');
+  assert.equal(
+    db.prepare('SELECT status FROM reports WHERE report_id = 2').get().status,
+    'REPORTED',
+  );
   assert.throws(() => db.exec("UPDATE handover_requests SET status = 'COMPLETED'"), /constraint/i);
-  db.exec("UPDATE handover_requests SET status = 'COMPLETED', recipient_name = '수령인', completed_at = '2026-11-12T03:00:00.000Z'");
+  db.exec(
+    "UPDATE handover_requests SET status = 'COMPLETED', recipient_name = '수령인', completed_at = '2026-11-12T03:00:00.000Z'",
+  );
   assert.equal(db.prepare('SELECT status FROM handover_requests').get().status, 'COMPLETED');
 });
 
-test('rolls back partial initialization on SQL failure', t => {
+// 초기화 중 SQL이 실패하면 앞서 만든 테이블도 모두 취소되는지 확인합니다.
+test('rolls back partial initialization on SQL failure', (t) => {
   const invalidSchema = join(temporaryDirectory(t), 'invalid.sql');
   writeFileSync(invalidSchema, 'THIS IS NOT SQL;', 'utf8');
   const db = openDatabase(':memory:');
   try {
     assert.throws(() => initializeDatabase(db, [schemaFiles[0], invalidSchema]), /syntax/i);
-    assert.equal(db.prepare("SELECT count(*) AS count FROM sqlite_schema WHERE type = 'table'").get().count, 0);
+    assert.equal(
+      db.prepare("SELECT count(*) AS count FROM sqlite_schema WHERE type = 'table'").get().count,
+      0,
+    );
     assert.equal(db.prepare('PRAGMA user_version').get().user_version, 0);
     initializeDatabase(db);
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 1);
-  } finally { db.close(); }
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+  } finally {
+    db.close();
+  }
 });
 
-test('refuses newer database versions and resolves relative paths from the project', t => {
+// 지원하지 않는 새 DB 버전은 거부하고 상대 경로는 프로젝트 기준으로 찾는지 확인합니다.
+test('refuses newer database versions and resolves relative paths from the project', (t) => {
   const db = fixture(t);
-  db.exec('PRAGMA user_version = 2');
+  db.exec('PRAGMA user_version = 3');
   assert.throws(() => initializeDatabase(db), /새로운 DB 버전/);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3);
   assert.equal(resolveDatabasePath(':memory:'), ':memory:');
   assert.match(resolveDatabasePath('database/lostfound.db'), /database[/\\]lostfound\.db$/);
 });

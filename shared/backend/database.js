@@ -1,3 +1,4 @@
+// [A] SQLite 파일 위치를 정하고 연결을 엽니다. 연결을 만든 쪽에서 사용 후 닫습니다.
 
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync } from 'node:fs';
@@ -11,10 +12,13 @@ export function resolveDatabasePath(path = process.env.DATABASE_PATH || 'databas
 }
 
 // 호출자가 연결을 사용한 뒤 close()합니다. import만으로 파일을 만들거나 데이터를 넣지 않습니다.
+
 // 외래 키 검사는 모든 연결에 적용하고, 다른 쓰기 작업이 있으면 최대 5초 기다립니다.
 export function openDatabase(path) {
   const filename = resolveDatabasePath(path);
-  if (filename !== ':memory:') mkdirSync(dirname(filename), { recursive: true });
+  if (filename !== ':memory:') {
+    mkdirSync(dirname(filename), { recursive: true });
+  }
   const db = new DatabaseSync(filename);
   try {
     db.exec('PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
