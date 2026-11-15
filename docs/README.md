@@ -1,8 +1,8 @@
 # A 구현 안내
 
-**담당: A 최성규 · 기준: 2026-11-15**
+**담당: A 최성규 · 구현 기준: 2026-11-15 · 문서 정리: 2026-11-16**
 
-역할분담 문서의 **1단계 공통 기반과 2단계 A**를 구현했습니다. 기존 설계 자료·상세 기록·검증 이미지는 [docs_A](../docs_A/)에 보관합니다. 팀원은 이 문서를 먼저 읽고, 요청·응답의 상세 형식이 필요할 때 [API 계약](../shared/contracts/api-contract.md)을 확인하세요.
+이 문서는 **A 구현 내용·파일 구조·개발 명령·공통 코드 사용법**을 설명합니다. 처음 실행은 [루트 README](../README.md), 담당 범위와 Git 절차는 [팀원 작업 가이드](../팀원_작업가이드.md)를 확인하세요. 상세 요청·응답은 [API 계약](../shared/contracts/api-contract.md), 이전 자료는 [docs_A](../docs_A/)에 있습니다.
 
 ## 1. 어디까지 구현했나요?
 
@@ -14,7 +14,7 @@
 | 사용자 관리 | 관리자 검색, 신고 제한·해제, 종료일·변경 사유 기록 |
 | 공통 도구 | 계정 메뉴, API 호출, 로그인·관리자 검사, 오류 안내 |
 
-B의 신고, C의 검색·매칭·통계, D의 인계·보관 기능은 각 담당자가 구현해야 합니다. 매칭·인계 알림은 C/D가 생성 함수를 연결해야 발생합니다.
+역할분담 문서의 **1단계 공통 기반과 2단계 A**를 완료했습니다. B의 신고, C의 검색·매칭·통계, D의 인계·보관 기능은 각 담당자가 구현해야 합니다. 매칭·인계 알림은 C/D가 생성 함수를 연결해야 발생합니다.
 
 ## 2. A 파일은 어디에 있나요?
 
@@ -26,7 +26,8 @@ Lost_and_Found/
 ├── .gitignore                        DB·환경 파일·설치 폴더를 Git에서 제외
 ├── vite.config.ts                    개발 API 프록시·화면 빌드 설정
 ├── index.html                        메인으로 이동하는 시작 페이지
-├── README.md                         실행 방법·현재 진행 상태
+├── README.md                         빠른 실행·문서 찾기
+├── 팀원_작업가이드.md                담당 범위·Git 협업 절차
 ├── AGENTS.md                         코드 수정 시 지킬 프로젝트 규칙
 ├── public/favicon.svg                공통 사이트 아이콘
 ├── shared/                           A가 관리하는 공통 코드
@@ -108,27 +109,57 @@ B/C/D의 SQL 파일은 각 기능 폴더에 있으며, 공통 init-db.js가 함�
 
 가입 흐름 예: `signup.html → signup.js → api.js → 계정 index.js → controller → service → users 테이블`. 로그인 조회 등은 repository를 사용합니다. service가 직접 SQL을 실행하는 부분도 있습니다.
 
-## 3. 먼저 실행하기
+## 3. 개발·관리자·DB
 
-Node.js 22.13 이상에서 프로젝트 폴더의 터미널로 실행합니다.
+### 개발·준비 명령
+
+최초 설치·실행 순서는 [빠른 실행](../README.md#빠른-실행)을 참고하세요. 아래 명령은 모두 프로젝트 폴더의 터미널에서 실행합니다.
+
+| 명령 | 언제 사용하나요? |
+| --- | --- |
+| `corepack pnpm install --frozen-lockfile` | 의존성·잠금 파일이 바뀌었을 때 같은 버전으로 설치 |
+| `corepack pnpm db:init` | 최초 DB 준비 또는 DB 스키마 갱신 후 실행 |
+| `corepack pnpm start` | Express 서버를 켜서 실제 기능 사용. 종료는 Ctrl+C |
+| `corepack pnpm dev:server` | Express 코드 수정 시 자동 재시작 |
+| `corepack pnpm dev` | Vite 개발 화면 실행. 별도 Express 서버 필요 |
+
+Vite에서는 `/features/account/frontend/login.html`처럼 긴 경로를 사용합니다. `/api` 요청은 Express 3000 포트로 전달됩니다. `.env.example`을 `.env`로 복사하면 HOST·PORT·DATABASE_PATH를 바꿀 수 있고, PORT를 바꾸면 vite.config.ts의 프록시 주소도 맞춰야 합니다.
+
+Express는 짧은 `/account/login.html`과 긴 경로를 모두 지원합니다. HTML 직접 열기나 dist만 정적 배포하는 방식으로는 인증·DB API가 실행되지 않습니다. preview는 빌드 화면 확인용이며 API 프록시는 제공하지 않습니다.
+
+### 관리자 계정 지정
+
+1. 회원가입 화면에서 계정을 만듭니다.
+2. 별도 터미널에서 아래 명령의 `본인아이디`를 가입한 아이디로 바꿔 실행합니다.
 
 ```sh
-corepack pnpm install --frozen-lockfile
-corepack pnpm db:init
-corepack pnpm start
+corepack pnpm admin:promote 본인아이디
 ```
 
-http://127.0.0.1:3000 접속 → 회원가입 → 로그인. 관리자는 가입 후 `corepack pnpm admin:promote 본인아이디`로 지정합니다. 화면은 `/account/login.html`, `/account/signup.html`, `/account/notifications.html`, `/account/admin-users.html`입니다.
+3. 해당 계정으로 로그인하고 사용자 관리 화면을 엽니다. 이미 로그인 중이면 새로고침합니다.
 
-개발 시 Express를 켜 둔 채 별도 터미널에서 `corepack pnpm dev`를 실행합니다. Vite에서는 `/features/account/frontend/login.html`처럼 긴 경로를 씁니다. `/api` 요청은 Express 3000 포트로 전달됩니다.
+기본 관리자·공용 비밀번호는 없습니다. 각 팀원은 자신의 로컬 DB에서 가입·지정해야 합니다. 공개 회원가입은 USER로만 생성되고, 일반 회원의 관리자 API 접근은 서버에서 거부합니다.
+
+| 계정 화면 | Express 경로 |
+| --- | --- |
+| 회원가입 | `/account/signup.html` |
+| 로그인 | `/account/login.html` |
+| 내 알림 | `/account/notifications.html` |
+| 관리자 사용자 관리 | `/account/admin-users.html` |
+
+### DB 확인
 
 DB는 기본 `database/lostfound.db`입니다. DB Browser for SQLite의 **데이터 보기 → users**에서 회원을 확인합니다. `.env`의 DATABASE_PATH를 바꿨다면 그 파일을 열어야 합니다. 테이블은 업무 8개 + 로그인용 sessions, 총 9개입니다.
+
+db:init은 기존 버전 1 데이터를 보존하고 sessions를 추가해 버전 2로 준비합니다. 테스트 계정·예시 알림은 넣지 않습니다. SQL 파일 수정만으로 기존 컬럼이 변경되지는 않으므로 추가 스키마 변경은 A와 조율합니다.
+
+인증은 7일 만료의 DB 세션·HttpOnly 쿠키를 사용합니다. 서버는 frontend·public만 공개하고 backend·SQL·환경 파일·DB는 공개하지 않습니다.
 
 ## 4. 각자 어떻게 이어서 작업하나요?
 
 ### 공통: 내 폴더에서 화면과 API 만들기
 
-각자 `features/<담당>/frontend`와 `backend`에서 작업합니다. 공통 코드·테이블 변경은 A와 조율합니다. 새 API 주소와 데이터 형식은 shared/contracts에도 반영합니다.
+작업 폴더와 변경 조율 규칙은 [담당 범위](../팀원_작업가이드.md#1-담당-범위)를 따릅니다. 아래 예제는 담당 화면과 서버에서 A의 공통 코드를 사용하는 방법입니다.
 
 화면 JS에서 공통 API 함수를 사용하세요. 아래 `/api/reports`는 **B가 구현할 API 예시**이며 아직 신고 저장은 제공하지 않습니다.
 
@@ -180,10 +211,13 @@ createNotification(req.db, {
 
 ## 5. 작업을 마친 뒤 확인하기
 
-```sh
-corepack pnpm test
-corepack pnpm build
-```
+| 명령 | 확인하는 내용 |
+| --- | --- |
+| `corepack pnpm test` | DB·서버·A 계정 자동 테스트 후 종료 |
+| `corepack pnpm build` | 20개 화면을 dist에 빌드. 서버를 실행하는 명령은 아님 |
+| `corepack pnpm test:account` | 계정 API·인증·권한·알림 |
+| `corepack pnpm test:server` | 화면 경로·비공개 파일 보호·라우터 |
+| `corepack pnpm test:db` | DB 초기화·제약·저장 |
 
 A 기준 자동 테스트 22개와 전체 화면 빌드를 검증했습니다. 가입·로그인·알림 읽음·사용자 제한은 Chrome과 모바일 크기에서도 확인했습니다. 기존 증거는 [작업 기록](../docs_A/work-logs/2026-11-15-A-2단계-완료.md)에 있습니다.
 
