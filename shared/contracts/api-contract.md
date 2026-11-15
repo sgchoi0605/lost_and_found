@@ -1,3 +1,99 @@
-# api-contract
+# API 계약 — A 계정·공통 기반
 
-다음 단계에서 팀 합의 후 작성합니다.
+2026-11-15 구현 기준. A(최성규)의 계정 API는 아래 계약으로 구현했습니다. B/C/D의 업무 API는 각 담당자가 구현해야 합니다. 이 문서가 전원 합의 완료를 의미하지는 않습니다.
+
+## 공통 규칙
+
+- 같은 출처에서 `/api/...`를 호출합니다. 개발 시 Vite가 `/api`를 Express 3000 포트로 전달합니다.
+- 상태 변경 요청은 `Content-Type: application/json`과 JSON 객체를 사용합니다. 빈 요청도 `{}`를 보냅니다.
+- 성공은 `{ "data": ... }`, 실패는 `{ "error": { "code": "...", "message": "..." } }`입니다. `/health`만 기존 연결 확인 응답을 유지합니다.
+- 인증은 `lf_session` HttpOnly·SameSite=Lax 쿠키입니다. 토큰을 JS·localStorage에 저장하지 않습니다. `fetch`에 `credentials: 'same-origin'`을 사용하세요.
+- 로그인은 7일 고정 만료, 재로그인 시 현재 쿠키의 이전 세션을 폐기합니다. 로그아웃은 현재 세션만 폐기합니다. 다른 기기의 세션은 유지됩니다.
+- 공개 회원가입은 항상 USER입니다. ADMIN은 로컬 `pnpm admin:promote <아이디>`로 부여합니다.
+- 로그인 아이디는 대소문자 구분, 이메일은 소문자로 정규화하고 대소문자 무관 중복 검사합니다.
+- API는 `Cache-Control: no-store`입니다. 타 출처의 상태 변경 요청은 차단합니다.
+- `/health`의 account-ready는 계정 코드 구현 상태만 표시하며 DB 연결·초기화 성공을 검사하지 않습니다. 실행 전에 db:init이 필요합니다.
+- `page` 기본 1, `limit` 기본 20·최대 100. ID는 양의 정수. 날짜는 UTC ISO 8601입니다.
+
+## 사용자 응답
+
+```json
+{
+  "user_id": 1,
+  "login_id": "student01",
+  "email": "student01@example.com",
+  "name": "학생",
+  "role": "USER",
+  "report_blocked": false,
+  "blocked_until": null,
+  "created_at": "2026-11-15T00:00:00.000Z"
+}
+```
+
+`password_hash`와 세션 토큰은 응답하지 않습니다. `report_blocked`는 DB의 0/1 원시값이 아니라 **현재 유효한 제한 여부(boolean)**입니다. 종료일이 지난 제한은 false로 응답하며 신고 가드에서도 통과합니다.
+
+## 엔드포인트
+
+접두사는 `/api/account`입니다.
+
+| 메서드·경로 | 권한 | 요청 | 성공 data |
+|---|---|---|---|
+| POST `/signup` | 공개 | 아래 가입 JSON | 사용자 객체, HTTP 201 |
+| POST `/login` | 공개 | `{loginId,password}` | 사용자 객체 + Set-Cookie |
+| GET `/me` | 로그인 | 없음 | 현재 사용자 객체 |
+| POST `/logout` | 로그인 | `{}` | `{loggedOut:true}` + 쿠키 삭제 |
+| GET `/notifications?page=1&limit=20` | 로그인 | 없음 | `{items,total,unreadCount,page,limit}` |
+| PATCH `/notifications/:id/read` | 알림 소유자 | `{}` | 변경된 알림 객체 |
+| PATCH `/notifications/read-all` | 로그인 | `{}` | `{updated:변경건수}` (본인 알림만) |
+| GET `/admin/users?q=검색어&page=1&limit=20` | ADMIN | 없음 | `{items,total,page,limit}` |
+| PATCH `/admin/users/:id/restriction` | ADMIN | 아래 제한 JSON | 변경된 사용자 객체 |
+| GET `/health` | 공개 | 없음 | 예외 형식: `{feature:"account",status:"ok",stage:"account-ready"}` |
+
+가입 요청:
+
+```json
+{"loginId":"student01","name":"학생","email":"student01@example.com","password":"test-password-123","confirmPassword":"test-password-123"}
+```
+
+- 아이디: 영문·숫자·`_`·`-` 4~30자. 이름: 공백 제거 후 1~50자. 이메일: 최대 254자·형식 검사.
+- 비밀번호: 8~128자, 확인 일치 필수. 비밀번호의 앞뒤 공백은 제거하지 않습니다.
+- 회원가입 후 자동 로그인하지 않습니다. 중복 아이디·이메일은 HTTP 409입니다.
+
+신고 제한 요청:
+
+```json
+{"blocked":true,"reason":"반복적인 허위 신고 확인","until":"2026-12-01T00:00:00.000Z"}
+```
+
+`until` 생략·null은 무기한. 해제는 `{ "blocked": false, "reason": "소명 확인" }`. 사유는 1~500자 필수입니다. 관리자 계정 제한은 금지합니다. 권한 변경·사용자 삭제 API는 제공하지 않습니다. 관리자 검색은 아이디·이름·이메일 부분 일치이며 `%`, `_`도 문자 그대로 검색합니다.
+
+알림 객체:
+
+```json
+{"notification_id":1,"user_id":1,"type":"MATCH","message":"유사한 습득물이 있습니다.","target_path":"/features/discovery/frontend/matches.html","read_at":null,"created_at":"2026-11-15T00:00:00.000Z"}
+```
+
+목록은 최신 ID 내림차순입니다. 읽음 처리는 반복해도 최초 `read_at`을 보존합니다. 타인의 알림 ID는 404입니다. 알림 생성은 공개 HTTP API 없이 C/D의 서버 코드에서 서비스 함수를 호출합니다. [호출 예제](../../docs/README.md)를 참고하세요.
+
+## 오류 코드
+
+| HTTP | code | 의미 |
+|---|---|---|
+| 400 | VALIDATION_ERROR / BAD_REQUEST | 필드 검증 실패 / 잘못된 JSON |
+| 401 | INVALID_CREDENTIALS | 로그인 아이디 또는 비밀번호 불일치 |
+| 401 | UNAUTHENTICATED | 로그인 없음·세션 만료 |
+| 403 | FORBIDDEN | 관리자 권한 없음 |
+| 403 | INVALID_ORIGIN | 타 출처 상태 변경 요청 |
+| 403 | REPORT_BLOCKED | 유효한 신고 제한 (B가 공통 가드 적용 시) |
+| 403 | ADMIN_RESTRICTION_DENIED | 관리자 계정 제한 시도 |
+| 404 | USER_NOT_FOUND / NOTIFICATION_NOT_FOUND / NOT_FOUND | 대상 또는 경로 없음 |
+| 409 | ACCOUNT_EXISTS | 아이디·이메일 중복 |
+| 415 | JSON_REQUIRED | 상태 변경 요청의 JSON 헤더 누락 |
+| 429 | RATE_LIMITED | 프로세스·IP별 가입/로그인 합산 15분 30회 초과 |
+| 500 | INTERNAL_SERVER_ERROR | DB 미초기화 등을 포함한 서버 오류 |
+
+서버 내부 경로·SQL·스택은 응답에 노출하지 않습니다. 상태 변경 API의 출처·JSON 검사가 라우터의 권한 검사보다 먼저 실행됩니다.
+
+## B/C/D 계약 상태
+
+`/api/reports`, `/api/discovery`, `/api/operations`는 기존 health 연결 확인만 구현돼 있습니다. 업무 API는 아직 없습니다. 새 API는 공통 성공·오류 형식과 인증 미들웨어를 사용하고 여기에 계약을 추가하세요. 신고·인계·매칭 상태 변경은 담당자 구현 후 통합 검증이 필요합니다.

@@ -1,4 +1,6 @@
-# DB 스키마 — 4단계 구현 기록
+# DB 스키마 — 버전 2 (A 인증 포함)
+
+2026-11-15 갱신: 기존 업무 테이블 8개와 sessions 1개, 총 9개입니다. 가입·해싱·세션·알림·사용자 제한은 구현했습니다. 아래 B/C/D 업무 규칙은 각 담당자 구현이 필요합니다.
 
 기준일: 2026-11-12. 최상위 기준은 프로젝트 상위의 `Lost_and_Found_역할분담.md`입니다.
 `최성규/diagram/ERD.drawio`는 컬럼과 관계의 보조 자료로 참고했습니다.
@@ -20,7 +22,7 @@
 - ID는 `INTEGER PRIMARY KEY`, 문자열은 `TEXT`, 유사도는 `REAL`입니다. `STRICT` 테이블을 사용합니다.
 - 선택 컬럼은 NULL을 허용하며, 나머지는 NOT NULL입니다. 날짜는 UTC ISO 8601 문자열 규약입니다.
 - `created_at`, `updated_at` 기본값은 DB에서 생성합니다. 수정 시 `updated_at`은 서비스가 갱신해야 합니다.
-- 날짜 문자열의 유효성, 이메일 형식, 비밀번호 해싱, 관리자 권한은 이후 서비스에서 검증해야 합니다.
+- A 서비스는 가입 이메일·비밀번호 해싱·제한 종료일·관리자 권한을 검증합니다. B/C/D의 업무 입력 검증은 각 서비스에서 구현해야 합니다.
 - 모든 연결에서 외래 키 검사를 활성화합니다. 연결된 데이터를 물리 삭제하지 않도록 외래 키는 `ON DELETE RESTRICT`입니다.
 - 신고 삭제는 `reports.deleted_at`을 이용한 논리 삭제를 전제로 합니다. 사용자 삭제 정책은 후속 인증 단계에서 정합니다.
 - 운영 DB에 테스트 계정·데모 데이터는 자동 삽입하지 않습니다.
@@ -34,6 +36,7 @@
 | A / account.schema.sql | users | user_id, login_id, email, password_hash, name, role, report_blocked, blocked_until?, created_at |
 | A / account.schema.sql | notifications | notification_id, user_id, type, message, target_path?, read_at?, created_at |
 | A / account.schema.sql | audit_logs | log_id, actor_id?, target_type, target_id, action, detail_json?, created_at |
+| A / account.schema.sql | sessions | token_hash (PK), user_id (FK), expires_at, created_at |
 | B / reports.schema.sql | reports | report_id, author_id, report_type, item_name, category, place, occurred_at, description, status, deleted_at?, created_at, updated_at |
 | B / reports.schema.sql | report_photos | photo_id, report_id, photo_url, sort_order, created_at |
 | C / matching.schema.sql | matches | match_id, lost_report_id, found_report_id, source, similarity?, status, reviewed_by?, reviewed_at?, created_at |
@@ -69,7 +72,9 @@
 ## 초기화와 변경
 
 `pnpm db:init`은 account → reports → discovery → operations 순으로 SQL을 한 트랜잭션에 적용합니다.
-성공 시 `PRAGMA user_version=1`로 기록하며 중간 오류는 롤백합니다.
+성공 시 `PRAGMA user_version=2`로 기록하며 중간 오류는 롤백합니다. 버전 1 DB에는 sessions와 인덱스를 추가하고 기존 데이터는 보존합니다.
 재실행은 데이터를 삭제하지 않습니다. `CREATE TABLE IF NOT EXISTS`는 기존 컬럼을 변경하는 마이그레이션이 아닙니다.
 이미 사용 중인 DB의 스키마를 수정할 때는 별도의 버전별 마이그레이션을 추가해야 합니다.
 현재 코드보다 높은 DB 버전은 초기화를 거부합니다.
+
+sessions.user_id는 ON DELETE CASCADE이며 그 외 기존 업무 외래 키는 ON DELETE RESTRICT입니다. 원본 세션은 저장하지 않고 SHA-256 해시를 보관합니다. 세션은 7일 후 만료되고 로그인 시 만료 행을 정리합니다. 로그아웃은 현재 세션 행을 삭제합니다. API는 report_blocked의 원시 플래그 대신 종료일을 반영한 유효 제한 여부를 boolean으로 응답합니다.

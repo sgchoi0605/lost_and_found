@@ -11,3 +11,9 @@
 - 역할분담 문서의 8개 테이블과 Express + SQLite를 유지합니다. ERD의 ACTIVITY_LOGS는 audit_logs, 사진 배열은 report_photos, 보관·폐기 컬럼은 storage_records로 대응합니다.
 - DB 접근은 Node 내장 node:sqlite를 사용합니다. 최소 Node 버전은 22.13이며 Node 24.14에서 검증했습니다.
 - SQL의 상태 코드와 제약은 4단계 구현 초안입니다. API와 상세 상태 전이 계약은 5단계에서 확정합니다.
+
+- 2026-11-15: 역할분담 문서 1단계 공통 기반 및 2단계 A를 구현했습니다. 과거 작업 순서의 3·4단계와 역할분담 단계 번호는 구분합니다.
+- 인증은 scrypt 해시·DB sessions·HttpOnly SameSite=Lax 쿠키, 7일 고정 만료입니다. DB 버전 2에서 기존 8개 업무 테이블은 보존하고 sessions를 추가합니다.
+- 공개 가입은 USER이며 관리자는 로컬 admin:promote 명령으로 지정합니다. 사용자 제한은 신고 등록 제한이고 로그인 차단이 아닙니다.
+- 알림 생성은 서버 함수로 제공하고 C/D 업무 트랜잭션에서 연결합니다. B의 신고 생성은 requireCanReport를 연결해야 합니다. B/C/D 업무 기능 및 전체 통합 테스트는 남았습니다.
+- 이번 A 범위 구현은 사용자의 2026-11-15 요청에 따른 것으로 전원 API 합의 완료를 의미하지 않습니다. 상세 계약은 shared/contracts와 A 연동 가이드에 기록했습니다.
