@@ -1,6 +1,65 @@
+
 <!doctype html>
-<html lang="ko"><head>
-    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. --><meta charset="UTF-8"><title>report-detail</title><link rel="stylesheet" href="../../../shared/frontend/css/base.css"><link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/discovery.css"></head><body>
-<!-- 담당 기능을 구현할 자리입니다. 메인 링크로 기존 화면에 돌아갈 수 있습니다. -->
-<main class="form-card"><h1>report-detail</h1><p>discovery 담당 화면 — 구현 예정</p><a href="/features/discovery/frontend/index.html">메인</a></main><!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
-    <script type="module" src="./js/report-detail.js"></script></body></html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 상세보기 | Lost & Found</title>
+
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
+    <link rel="stylesheet" href="./css/discovery.css">
+</head>
+<body>
+
+<main class="form-card">
+
+    <a href="./search.html">← 검색 목록으로 돌아가기</a>
+
+    <h1>물품 상세 정보</h1>
+
+    <p id="message" role="status"></p>
+
+    <article id="reportDetail" hidden>
+
+        <span id="reportType"></span>
+        <h2 id="itemName"></h2>
+
+        <!-- 물품 사진 -->
+        <div id="reportPhotos"></div>
+
+        <!-- 물품 상세 정보 -->
+        <dl>
+            <dt>카테고리</dt>
+            <dd id="category"></dd>
+
+            <dt>분실·습득 장소</dt>
+            <dd id="place"></dd>
+
+            <dt>발생 일시</dt>
+            <dd id="occurredAt"></dd>
+
+            <dt>물품 특징</dt>
+            <dd id="description"></dd>
+
+            <dt>현재 상태</dt>
+            <dd id="status"></dd>
+
+            <dt>등록 일시</dt>
+            <dd id="createdAt"></dd>
+        </dl>
+
+        <!-- 관련 기능 이동 -->
+        <div>
+            <a id="matchesLink">유사 물품 확인하기</a>
+            <a id="handoverLink" hidden>인계 신청하기</a>
+        </div>
+
+    </article>
+
+</main>
+
+<script type="module" src="./js/report-detail.js"></script>
+
+</body>
+</html>
