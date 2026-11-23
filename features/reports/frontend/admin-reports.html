@@ -30,21 +30,25 @@
             <p>접수된 분실물·습득물 신고의 진행 상태를 확인하고 관리합니다.</p>
           </div>
 
-          <!-- 상태별 필터 선택 영역입니다. -->
+          <!-- DB 계약 상태값 기준 필터 선택 영역입니다. -->
           <select id="statusFilter" class="status-select" aria-label="신고 상태 필터">
             <option value="all">전체 상태</option>
-            <option value="received">접수됨</option>
-            <option value="matching">매칭 중</option>
-            <option value="ready">인계 완료</option>
+            <option value="REPORTED">신고됨</option>
+            <option value="RECEIVED">접수됨</option>
+            <option value="STORED">보관 중</option>
+            <option value="MATCHED">매칭됨</option>
+            <option value="HANDOVER_IN_PROGRESS">인계 진행 중</option>
+            <option value="HANDED_OVER">인계 완료</option>
+            <option value="DISPOSED">폐기</option>
+            <option value="TRANSFERRED">이관</option>
           </select>
         </div>
 
-        <!-- JS에서 전체 신고 목록을 렌더링하는 영역입니다. -->
+        <!-- JS에서 전체 신고 목록을 동적으로 렌더링하는 영역입니다. -->
         <div id="adminReportList" class="my-report-list"></div>
       </section>
     </main>
 
-    <!-- 관리자 신고 조회 및 상태 변경 이벤트를 처리하는 JS 모듈을 연결합니다. -->
     <script type="module" src="./js/admin-reports.js"></script>
   </body>
 </html>

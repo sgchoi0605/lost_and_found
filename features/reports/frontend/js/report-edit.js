@@ -1,98 +1,158 @@
-// [B] 본인 신고 내용 조회와 수정·삭제 요청을 처리합니다.
+// [B] 본인 신고 단건 조회(/api/reports/:id)와 수정·삭제 요청을 처리합니다.
 
+import { api } from '../../../../shared/frontend/js/api.js';
+import { requireUser } from '../../../../shared/frontend/js/auth-guard.js';
 import { showToast } from '../../../../shared/frontend/js/toast.js';
-// 추후 백엔드 API 연동 시 아래 모듈을 사용합니다.
-// import { api } from '../../../../shared/frontend/js/api.js';
+import { formatDateOnly, splitStoragePlace } from './reports-common.js';
 
 const form = document.querySelector('#editForm');
+const notice = document.querySelector('#formNotice');
+const submitBtn = document.querySelector('#submitBtn');
 const deleteBtn = document.querySelector('#deleteBtn');
+const storagePlaceField = document.querySelector('#storagePlaceField');
 
-// URL 쿼리스트링에서 수정 대상 신고 번호를 추출합니다.
-const params = new URLSearchParams(location.search);
-const reportId = Number(params.get('id')) || 1;
+let currentReport = null;
 
-// 서버 연동 전 화면 확인용 임시 신고 데이터입니다.
-const SAMPLE_REPORTS = [
-  {
-    id: 1,
-    type: '분실물',
-    itemName: '브라운 카드 지갑',
-    category: '지갑',
-    place: '상도동',
-    date: '2026-11-15',
-    details: '모서리에 약간의 스크래치가 있습니다.',
-  },
-  {
-    id: 2,
-    type: '습득물',
-    itemName: '검정색 에어팟 프로',
-    category: '전자기기',
-    place: '사당동',
-    date: '2026-11-18',
-    details: '투명 케이스가 씌워져 있습니다.',
-  },
-  {
-    id: 3,
-    type: '분실물',
-    itemName: '검정색 우산',
-    category: '기타',
-    place: '노량진동',
-    date: '2026-11-10',
-    details: '손잡이가 나무 재질입니다.',
-  },
-];
-
-// 대상 신고 데이터를 불러와 폼 입력칸에 채웁니다.
-function loadReport() {
-  // 추후 서버 연동 시 단건 조회 API로 데이터를 가져옵니다.
-  // const report = await api(`/api/reports/${reportId}`);
-  const report = SAMPLE_REPORTS.find((item) => item.id === reportId) || SAMPLE_REPORTS[0];
-
-  form.type.value = report.type;
-  form.itemName.value = report.itemName;
-  form.category.value = report.category;
-  form.place.value = report.place;
-  form.date.value = report.date;
-  form.details.value = report.details;
+// 폼 전체 입력칸과 버튼의 비활성화 상태를 한 번에 전환합니다.
+function setFormDisabled(disabled) {
+  for (const element of form.elements) {
+    if (element.name === 'type') {
+      element.disabled = true;
+      continue;
+    }
+    element.disabled = disabled;
+  }
 }
 
-// 폼 제출 시 유효성을 검사하고 수정 요청을 처리합니다.
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
+// DB에 저장된 카테고리·장소가 기본 옵션에 없더라도 값이 유지되도록 보강합니다.
+function setSelectValue(select, value) {
+  if (value && !Array.from(select.options).some((option) => option.value === value)) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    select.append(option);
+  }
+  select.value = value || '';
+}
 
-  if (!form.checkValidity()) {
-    showToast('필수 항목을 모두 입력해 주세요.');
+// URL 쿼리스트링의 신고 ID를 검증합니다. 임의 기본값은 사용하지 않습니다.
+function readReportId() {
+  const rawId = new URLSearchParams(location.search).get('id');
+  if (!rawId || !/^[1-9]\d*$/.test(rawId) || !Number.isSafeInteger(Number(rawId))) {
+    return null;
+  }
+  return rawId;
+}
+
+// 서버에서 기존 신고 정보를 불러와 입력칸에 채웁니다.
+async function loadReport(reportId) {
+  setFormDisabled(true);
+  try {
+    const report = await api(`/api/reports/${reportId}`);
+    currentReport = report;
+
+    form.type.value = report.report_type;
+    form.itemName.value = report.item_name;
+    setSelectValue(form.category, report.category);
+    setSelectValue(form.place, report.place);
+    form.date.value = formatDateOnly(report.occurred_at);
+
+    if (report.report_type === 'FOUND') {
+      const { storagePlace, details } = splitStoragePlace(report.description);
+      storagePlaceField.hidden = false;
+      form.storagePlace.value = storagePlace;
+      form.details.value = details;
+    } else {
+      storagePlaceField.hidden = true;
+      form.storagePlace.value = '';
+      form.details.value = report.description || '';
+    }
+
+    setFormDisabled(false);
+  } catch (error) {
+    notice.textContent = error.message;
+    notice.hidden = false;
+    showToast(error.message);
+  }
+}
+
+// 로그인 확인 후 수정 대상 신고를 불러오고 저장·삭제 이벤트를 연결합니다.
+async function init() {
+  const user = await requireUser();
+  if (!user) {
     return;
   }
 
-  const updatedData = {
-    type: form.type.value,
-    itemName: form.itemName.value.trim(),
-    category: form.category.value,
-    place: form.place.value,
-    date: form.date.value,
-    details: form.details.value.trim(),
-  };
+  const reportId = readReportId();
+  if (!reportId) {
+    setFormDisabled(true);
+    notice.textContent = '올바른 신고 번호가 필요합니다. 내 신고 내역에서 다시 선택해주세요.';
+    notice.hidden = false;
+    return;
+  }
 
-  console.log(`수정할 신고(${reportId}) 데이터:`, updatedData);
+  await loadReport(reportId);
 
-  // 추후 서버 연동 시 수정 API를 호출합니다.
-  // await api(`/api/reports/${reportId}`, { method: 'PATCH', body: updatedData });
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!currentReport) {
+      return;
+    }
+    notice.hidden = true;
 
-  showToast('신고 내역이 수정되었습니다.');
-  setTimeout(() => location.assign('./my-reports.html'), 800);
-});
+    if (!form.checkValidity()) {
+      showToast('필수 항목을 모두 입력해 주세요.');
+      return;
+    }
 
-// 삭제 버튼 클릭 시 확인 후 삭제 요청을 처리합니다.
-deleteBtn.addEventListener('click', async () => {
-  if (!window.confirm('이 신고 내역을 정말 삭제하시겠습니까?')) return;
+    const payload = {
+      itemName: form.itemName.value.trim(),
+      category: form.category.value,
+      place: form.place.value,
+      occurredAt: form.date.value,
+      description: form.details.value.trim(),
+    };
+    if (currentReport.report_type === 'FOUND') {
+      payload.storagePlace = form.storagePlace.value.trim();
+    }
 
-  // 추후 서버 연동 시 삭제 API를 호출합니다.
-  // await api(`/api/reports/${reportId}`, { method: 'DELETE' });
+    submitBtn.disabled = true;
+    deleteBtn.disabled = true;
+    try {
+      await api(`/api/reports/${reportId}`, { method: 'PATCH', body: payload });
+      showToast('신고 내역이 수정되었습니다.');
+      location.assign('./my-reports.html');
+    } catch (error) {
+      notice.textContent = error.message;
+      notice.hidden = false;
+      showToast(error.message);
+      submitBtn.disabled = false;
+      deleteBtn.disabled = false;
+    }
+  });
 
-  showToast('신고 내역이 삭제되었습니다.');
-  setTimeout(() => location.assign('./my-reports.html'), 800);
-});
+  deleteBtn.addEventListener('click', async () => {
+    if (!currentReport) {
+      return;
+    }
+    if (!window.confirm('이 신고 내역을 정말 삭제하시겠습니까?')) {
+      return;
+    }
 
-// 초기 화면 진입 시 기존 신고 정보를 불러옵니다.
-loadReport();
+    submitBtn.disabled = true;
+    deleteBtn.disabled = true;
+    try {
+      await api(`/api/reports/${reportId}`, { method: 'DELETE', body: {} });
+      showToast('신고 내역이 삭제되었습니다.');
+      location.assign('./my-reports.html');
+    } catch (error) {
+      notice.textContent = error.message;
+      notice.hidden = false;
+      showToast(error.message);
+      submitBtn.disabled = false;
+      deleteBtn.disabled = false;
+    }
+  });
+}
+
+init();
