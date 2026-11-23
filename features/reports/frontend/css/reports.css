@@ -1,1 +1,84 @@
+/* [B] 분실·습득 신고 화면의 전용 스타일입니다. */
 
+/* 목록 화면 상단의 제목과 버튼·필터 영역을 정렬합니다. */
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.list-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 신고 목록을 세로로 나열합니다. */
+.my-report-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* 개별 신고 항목 카드의 배치를 지정합니다. */
+.my-report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: #fff;
+}
+
+.my-report-info {
+  display: grid;
+  gap: 6px;
+}
+
+.my-report-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-report-info b {
+  font-size: 14px;
+}
+
+.my-report-info small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.my-report-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* 관리자 신고 관리 카드의 최대 너비를 넓힙니다. */
+.admin-reports-card {
+  width: min(860px, 100%);
+}
+
+/* 필터 및 상태 변경용 선택 상자 스타일을 지정합니다. */
+.status-select {
+  border: 1px solid #a99485;
+  background: #fff;
+  color: var(--ink);
+  border-radius: 4px;
+  padding: 9px 12px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* 모바일 화면에서는 목록 항목을 세로로 배치합니다. */
+@media (max-width: 620px) {
+  .my-report-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

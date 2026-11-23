@@ -1,2 +1,50 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="UTF-8"><title>admin-reports</title><link rel="stylesheet" href="../../../shared/frontend/css/base.css"><link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/reports.css"></head><body><main class="form-card"><h1>admin-reports</h1><p>reports 담당 화면 — 구현 예정</p><a href="../../discovery/frontend/index.html">메인</a></main><script type="module" src="./js/admin-reports.js"></script></body></html>
+<html lang="ko">
+  <head>
+    <!-- 화면 제목과 공통·기능별 스타일을 불러옵니다. -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>관리자 신고 관리 | LOST & FOUND</title>
+    <link rel="icon" href="../../../public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/reports.css" />
+  </head>
+  <body class="form-page">
+    <!-- 상단 로고 및 홈 이동 링크를 표시합니다. -->
+    <header class="simple-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>다시 만나는 가장 따뜻한 방법</small></span>
+      </a>
+      <a class="back-link" href="/features/discovery/frontend/index.html">← 홈으로 돌아가기</a>
+    </header>
+
+    <!-- 관리자 신고 목록 본문 영역입니다. -->
+    <main class="form-page-main">
+      <section class="form-card admin-reports-card">
+        <div class="list-header">
+          <div>
+            <span class="eyebrow">ADMIN REPORTS</span>
+            <h1>전체 신고 관리</h1>
+            <p>접수된 분실물·습득물 신고의 진행 상태를 확인하고 관리합니다.</p>
+          </div>
+
+          <!-- 상태별 필터 선택 영역입니다. -->
+          <select id="statusFilter" class="status-select" aria-label="신고 상태 필터">
+            <option value="all">전체 상태</option>
+            <option value="received">접수됨</option>
+            <option value="matching">매칭 중</option>
+            <option value="ready">인계 완료</option>
+          </select>
+        </div>
+
+        <!-- JS에서 전체 신고 목록을 렌더링하는 영역입니다. -->
+        <div id="adminReportList" class="my-report-list"></div>
+      </section>
+    </main>
+
+    <!-- 관리자 신고 조회 및 상태 변경 이벤트를 처리하는 JS 모듈을 연결합니다. -->
+    <script type="module" src="./js/admin-reports.js"></script>
+  </body>
+</html>
