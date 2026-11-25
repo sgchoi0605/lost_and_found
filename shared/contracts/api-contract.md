@@ -1,3 +1,5 @@
+ > 2026-11-25 ABC 통합판: A/B/C 구현 및 DB v3 반영. D는 미구현입니다. 현재 통합 정책은 docs/ABC_통합결과.md와 각 계약 문서의 ABC 추가 내용을 우선합니다. 아래의 2026-11-15 미구현 표기는 당시 기록입니다.
+
 # API 계약 — A 계정·공통 기반
 
 2026-11-15 구현 기준. A(최성규)의 계정 API는 아래 계약으로 구현했습니다. B/C/D의 업무 API는 각 담당자가 구현해야 합니다. 이 문서가 전원 합의 완료를 의미하지는 않습니다.
@@ -97,3 +99,52 @@
 ## B/C/D 계약 상태
 
 `/api/reports`, `/api/discovery`, `/api/operations`는 기존 health 연결 확인만 구현돼 있습니다. 업무 API는 아직 없습니다. 새 API는 공통 성공·오류 형식과 인증 미들웨어를 사용하고 여기에 계약을 추가하세요. 신고·인계·매칭 상태 변경은 담당자 구현 후 통합 검증이 필요합니다.
+
+## ABC 통합 계약 — 2026-11-25 현재 기준
+
+A API는 위 계약을 유지합니다. B/C는 아래 업무 API가 구현되어 있으며, 위의 B/C 미구현 설명을 대체합니다. 인증·응답 래퍼·JSON 요청·권한 검사는 공통 규칙을 따릅니다.
+
+### B: /api/reports
+
+| 메서드 | 경로 | 권한 / 내용 |
+|---|---|---|
+| GET | /health | 공개, stage=reports-ready |
+| GET | /photos/:fileName | 공개, 검증된 업로드 사진 |
+| POST | / | 로그인+신고 가능, 신고 등록 |
+| GET | /mine | 로그인, 본인 목록 page/limit |
+| GET | /:id | 본인 또는 관리자, 수정용 상세 |
+| PATCH | /:id | 본인, 전체 편집 필드 전달 |
+| DELETE | /:id | 본인, 논리 삭제 |
+| GET | /admin | 관리자, q/status/reportType/page/limit |
+| PATCH | /admin/:id/status | 관리자, {status}, 기본 상태 전이만 허용 |
+| DELETE | /admin/:id | 관리자, 논리 삭제 |
+
+등록 입력: `{reportType,itemName,category,place,occurredAt,description,storagePlace?,photos?}`. 수정은 reportType 변경 불가, 나머지 기본 필드를 전달합니다. `storagePlace`는 습득 신고의 `storage_place`에 저장합니다. `description`은 특징만 담습니다. 날짜·시간은 시간대가 포함된 ISO를 권장하며 날짜 전용 입력은 UTC 자정으로 호환합니다.
+
+목록 data는 `{items,total,page,limit}`, 등록/단건/수정은 신고 객체, 삭제는 `{report_id,deleted:true}`입니다. 등록은 HTTP 201입니다. 신고 객체의 DB 필드는 snake_case이며 사진은 `photos` 배열에 포함됩니다. 관리자 검색 q는 이름·설명의 대소문자 무관 부분 일치이며 %, _도 문자로 처리합니다.
+
+사진은 기존 JSON 100KB 제한 내에서 프론트 압축 후 전송합니다. 최대 3장, 서버 바이너리 기준 장당 60KB·합계 65KB입니다. JPG/PNG 시그니처와 경로를 검사합니다.
+
+기본 상태 전이: REPORTED → RECEIVED, FOUND만 RECEIVED → STORED. 그 외 409 INVALID_REPORT_TRANSITION. 확정 매칭, 진행/완료 인계, D 보관 기록, 기본 단계가 아닌 신고의 수정·삭제·상태 변경은 409 REPORT_LOCKED입니다. 404 REPORT_NOT_FOUND, 400 VALIDATION_ERROR도 반환합니다.
+
+### C: /api/discovery
+
+| 메서드 | 경로 | 권한 / 내용 |
+|---|---|---|
+| GET | /health | 공개, stage=discovery-ready |
+| GET | /reports | 공개, q/reportType/category/place/startDate/endDate/status/page/limit |
+| GET | /reports/:id | 공개, 삭제되지 않은 신고·사진·storage_place |
+| GET | /matchable-reports | 로그인, 본인의 후보 생성 가능 신고 |
+| POST | /reports/:id/matches | 작성자, {}, 후보 생성 |
+| GET | /matches | 로그인, 본인의 매칭, reportId/page/limit |
+| GET | /admin/matches | 관리자, status/page/limit |
+| POST | /admin/matches/:id/review | 관리자, {action: CONFIRM 또는 REJECT 또는 RELEASE} |
+| GET | /admin/stats | 관리자, startDate/endDate/reportType/category |
+
+후보 생성 data: `{reportId,compared,eligible,created,existing}`. 매칭 목록 data: `{items,total,page,limit}`. 검토 data: `{match_id,previousStatus,status,reviewed_by,reviewed_at}`. 통계 data: `{filters,summary,byType,byCategory,byStatus,byDate,handover,categories}`. 상세는 신고 객체입니다.
+
+오류: 400 VALIDATION_ERROR, 401 UNAUTHENTICATED, 403 FORBIDDEN, 404 NOT_FOUND, 충돌은 409 MATCH_CONFLICT/HANDOVER_CONFLICT/STORAGE_CONFLICT/INVALID_STATUS/INVALID_REPORT_STATUS/REPORT_UNAVAILABLE/RESTORE_UNAVAILABLE/STALE_MATCH. STALE_MATCH는 최신 신고가 후보 조건을 충족하지 않는 경우입니다.
+
+후보 생성은 수동 실행입니다. B 수정·삭제 시 C의 invalidateReportCandidates(db, reportId, actorId)를 같은 트랜잭션에서 호출합니다. C의 검색·상세·매칭 서비스는 호출자로부터 db를 받으며 자체 연결을 열지 않습니다. 관리자 거절은 유지하고, 일반 후보 무효화는 감사 이력에 남깁니다.
+
+D는 /health만 구현되어 있으며 인계 신청·폐기 API는 제공하지 않습니다.

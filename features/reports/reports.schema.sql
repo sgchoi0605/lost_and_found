@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS reports (
   place TEXT NOT NULL CHECK (length(trim(place)) > 0),
   occurred_at TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
+  storage_place TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'REPORTED' CHECK (status IN (
     'REPORTED', 'RECEIVED', 'STORED', 'MATCHED', 'HANDOVER_IN_PROGRESS', 'HANDED_OVER', 'DISPOSED', 'TRANSFERRED'
   )),

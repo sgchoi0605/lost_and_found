@@ -1,6 +1,85 @@
+
 <!doctype html>
-<html lang="ko"><head>
-    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. --><meta charset="UTF-8"><title>admin-matches</title><link rel="stylesheet" href="../../../shared/frontend/css/base.css"><link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/discovery.css"></head><body>
-<!-- 담당 기능을 구현할 자리입니다. 메인 링크로 기존 화면에 돌아갈 수 있습니다. -->
-<main class="form-card"><h1>admin-matches</h1><p>discovery 담당 화면 — 구현 예정</p><a href="/features/discovery/frontend/index.html">메인</a></main><!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
-    <script type="module" src="./js/admin-matches.js"></script></body></html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 매칭 관리 | Lost & Found</title>
+
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
+    <link rel="stylesheet" href="./css/discovery.css">
+</head>
+
+<body>
+
+<main class="form-card admin-matches-page">
+
+    <a href="./index.html">← 메인으로 돌아가기</a>
+
+    <h1>관리자 매칭 관리</h1>
+
+    <p>
+        자동으로 생성된 유사 물품 매칭 후보를
+        검토하고 관리할 수 있습니다.
+    </p>
+
+    <section class="admin-filter">
+
+        <h2>매칭 상태별 조회</h2>
+
+        <label for="statusFilter">매칭 상태</label>
+
+        <select id="statusFilter">
+            <option value="">전체</option>
+            <option value="CANDIDATE">매칭 후보</option>
+            <option value="CONFIRMED">매칭 확정</option>
+            <option value="REJECTED">매칭 거절</option>
+        </select>
+
+        <button type="button" id="refreshButton">
+            새로고침
+        </button>
+
+    </section>
+
+    <hr>
+
+    <section>
+
+        <h2>매칭 관리 목록</h2>
+
+        <p id="resultCount"></p>
+
+        <p id="message" role="status"></p>
+
+        <a id="loginLink"
+           href="/features/account/frontend/login.html"
+           hidden>
+            로그인하기
+        </a>
+
+        <div id="adminMatchResults"></div>
+
+        <div id="pagination" hidden>
+
+            <button type="button" id="prevButton">
+                이전
+            </button>
+
+            <span id="pageInfo"></span>
+
+            <button type="button" id="nextButton">
+                다음
+            </button>
+
+        </div>
+
+    </section>
+
+</main>
+
+<script type="module" src="./js/admin-matches.js"></script>
+
+</body>
+</html>

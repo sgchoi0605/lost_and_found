@@ -335,6 +335,6 @@ test('v1 database upgrade preserves users and adds persistent sessions', (t) => 
   );
   initializeDatabase(db);
   assert.equal(db.prepare('SELECT count(*) AS n FROM users').get().n, 1);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3);
   assert.equal(db.prepare('SELECT count(*) AS n FROM sessions').get().n, 0);
 });

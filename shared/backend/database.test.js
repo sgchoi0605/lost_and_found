@@ -57,7 +57,7 @@ test('creates eight business tables plus sessions and enables foreign keys', (t)
     'users',
   ]);
   assert.equal(db.prepare('PRAGMA foreign_keys').get().foreign_keys, 1);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3);
   assert.equal(db.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
 });
@@ -205,7 +205,7 @@ test('rolls back partial initialization on SQL failure', (t) => {
     );
     assert.equal(db.prepare('PRAGMA user_version').get().user_version, 0);
     initializeDatabase(db);
-    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 2);
+    assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3);
   } finally {
     db.close();
   }
@@ -214,9 +214,9 @@ test('rolls back partial initialization on SQL failure', (t) => {
 // 지원하지 않는 새 DB 버전은 거부하고 상대 경로는 프로젝트 기준으로 찾는지 확인합니다.
 test('refuses newer database versions and resolves relative paths from the project', (t) => {
   const db = fixture(t);
-  db.exec('PRAGMA user_version = 3');
+  db.exec('PRAGMA user_version = 4');
   assert.throws(() => initializeDatabase(db), /새로운 DB 버전/);
-  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3);
+  assert.equal(db.prepare('PRAGMA user_version').get().user_version, 4);
   assert.equal(resolveDatabasePath(':memory:'), ':memory:');
   assert.match(resolveDatabasePath('database/lostfound.db'), /database[/\\]lostfound\.db$/);
 });

@@ -18,7 +18,7 @@ export const schemaFiles = [
 // 재실행해도 기존 데이터는 보존하며, 향후 스키마 변경은 별도의 마이그레이션이 필요합니다.
 export function initializeDatabase(db, files = schemaFiles) {
   const version = db.prepare('PRAGMA user_version').get().user_version;
-  if (version > 2) {
+  if (version > 3) {
     throw new Error('현재 코드보다 새로운 DB 버전입니다. 초기화를 중단합니다.');
   }
   if (db.prepare('PRAGMA foreign_keys').get().foreign_keys !== 1) {
@@ -29,10 +29,20 @@ export function initializeDatabase(db, files = schemaFiles) {
     for (const file of files) {
       db.exec(readFileSync(file, 'utf8'));
     }
+    // v2 데이터는 삭제하지 않고 보관 장소를 구조화합니다.
+    const columns = db.prepare('PRAGMA table_info(reports)').all();
+    if (columns.length && !columns.some((column) => column.name === 'storage_place')) {
+      db.exec("ALTER TABLE reports ADD COLUMN storage_place TEXT NOT NULL DEFAULT ''");
+      for (const row of db.prepare("SELECT report_id, description FROM reports WHERE report_type = 'FOUND'").all()) {
+        const match = row.description.match(/^\[보관 장소:\s*([^\]]*)\]\s*/);
+        if (match) db.prepare('UPDATE reports SET storage_place = ?, description = ? WHERE report_id = ?')
+          .run(match[1].trim(), row.description.slice(match[0].length), row.report_id);
+      }
+    }
     if (db.prepare('PRAGMA foreign_key_check').all().length) {
       throw new Error('DB에 외래 키 위반 데이터가 있습니다.');
     }
-    db.exec('PRAGMA user_version = 2; COMMIT;');
+    db.exec('PRAGMA user_version = 3; COMMIT;');
   } catch (error) {
     db.exec('ROLLBACK');
     throw error;

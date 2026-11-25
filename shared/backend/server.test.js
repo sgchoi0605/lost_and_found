@@ -68,7 +68,7 @@ test('account readiness and other feature routing checks are available', async (
     assert.deepEqual(await response.json(), {
       feature,
       status: 'ok',
-      stage: feature === 'account' ? 'account-ready' : 'routing-only',
+      stage: feature === 'operations' ? 'routing-only' : `${feature}-ready`,
     });
   }
   assert.equal((await fetch(`${base}/api/account/login`, { method: 'POST' })).status, 415);
