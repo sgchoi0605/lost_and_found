@@ -1,0 +1,65 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>신고 상세보기 | Lost & Found</title>
+
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
+    <link rel="stylesheet" href="./css/discovery.css">
+</head>
+<body>
+
+<main class="form-card">
+
+    <a href="./search.html">← 검색 목록으로 돌아가기</a>
+
+    <h1>물품 상세 정보</h1>
+
+    <p id="message" role="status"></p>
+
+    <article id="reportDetail" hidden>
+
+        <span id="reportType"></span>
+        <h2 id="itemName"></h2>
+
+        <!-- 물품 사진 -->
+        <div id="reportPhotos"></div>
+
+        <!-- 물품 상세 정보 -->
+        <dl>
+            <dt>카테고리</dt>
+            <dd id="category"></dd>
+
+            <dt>분실·습득 장소</dt>
+            <dd id="place"></dd>
+
+            <dt>발생 일시</dt>
+            <dd id="occurredAt"></dd>
+
+            <dt>물품 특징</dt>
+            <dd id="description"></dd>
+
+            <dt>현재 상태</dt>
+            <dd id="status"></dd>
+
+            <dt>등록 일시</dt>
+            <dd id="createdAt"></dd>
+        </dl>
+
+        <!-- 관련 기능 이동 -->
+        <div>
+            <a id="matchesLink">유사 물품 확인하기</a>
+            <a id="handoverLink" hidden>인계 신청하기</a>
+        </div>
+
+    </article>
+
+</main>
+
+<script type="module" src="./js/report-detail.js"></script>
+
+</body>
+</html>

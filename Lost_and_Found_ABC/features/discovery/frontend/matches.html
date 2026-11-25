@@ -1,0 +1,65 @@
+
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유사 물품 매칭 | Lost & Found</title>
+
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
+    <link rel="stylesheet" href="./css/discovery.css">
+</head>
+<body>
+
+<main class="form-card">
+
+    <a href="./index.html">← 메인으로 돌아가기</a>
+
+    <h1>유사 물품 매칭</h1>
+
+    <p>등록한 신고와 유사한 물품을 확인해 보세요.</p>
+
+    <section>
+        <h2>내 신고 선택</h2>
+
+        <label for="reportSelect">매칭할 물품</label>
+
+        <select id="reportSelect">
+            <option value="">전체 매칭 결과</option>
+        </select>
+
+        <button type="button" id="generateButton" disabled>
+            유사 물품 찾기
+        </button>
+    </section>
+
+    <hr>
+
+    <section>
+        <h2>매칭 결과</h2>
+
+        <p id="resultCount"></p>
+        <p id="message" role="status"></p>
+
+        <a id="loginLink"
+           href="/features/account/frontend/login.html"
+           hidden>
+            로그인하기
+        </a>
+
+        <div id="matchResults"></div>
+
+        <div id="pagination" hidden>
+            <button type="button" id="prevButton">이전</button>
+            <span id="pageInfo"></span>
+            <button type="button" id="nextButton">다음</button>
+        </div>
+    </section>
+
+</main>
+
+<script type="module" src="./js/matches.js"></script>
+
+</body>
+</html>

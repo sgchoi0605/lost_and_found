@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <!-- 화면 제목과 공통·기능별 스타일을 불러옵니다. -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>신고 내역 수정 | LOST & FOUND</title>
+    <link rel="icon" href="../../../public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/reports.css" />
+  </head>
+  <body class="form-page">
+    <!-- 상단 로고 및 내 신고 내역 이동 링크를 표시합니다. -->
+    <header class="simple-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>다시 만나는 가장 따뜻한 방법</small></span>
+      </a>
+      <a class="back-link" href="./my-reports.html">← 내 신고 내역으로 돌아가기</a>
+    </header>
+
+    <!-- 신고 내역 수정 폼 본문 영역입니다. -->
+    <main class="form-page-main">
+      <section class="form-card report-form-card">
+        <span class="eyebrow">EDIT REPORT</span>
+        <h1>신고 내역 수정</h1>
+        <p>등록한 물건의 정보를 수정하거나 신고를 삭제할 수 있습니다.</p>
+
+        <p id="formNotice" class="report-notice" hidden></p>
+
+        <form id="editForm" novalidate>
+          <!-- 수정할 신고 상세 정보 입력 영역입니다. -->
+          <div class="form-grid">
+            <label class="field">
+              <span>신고 유형 (변경 불가)</span>
+              <select name="type" disabled>
+                <option value="LOST">분실물</option>
+                <option value="FOUND">습득물</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>물품명</span>
+              <input name="itemName" required />
+            </label>
+
+            <label class="field">
+              <span>카테고리</span>
+              <select name="category" required>
+                <option value="">선택하세요</option>
+                <option value="지갑">지갑</option>
+                <option value="전자기기">전자기기</option>
+                <option value="카드">카드</option>
+                <option value="가방">가방</option>
+                <option value="열쇠">열쇠</option>
+                <option value="기타">기타</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>장소 · 동작구</span>
+              <select name="place" required>
+                <option value="">동작구 장소를 선택하세요</option>
+                <option value="노량진동">노량진동</option>
+                <option value="상도동">상도동</option>
+                <option value="흑석동">흑석동</option>
+                <option value="사당동">사당동</option>
+                <option value="대방동 · 신대방동">대방동 · 신대방동</option>
+                <option value="동작동">동작동</option>
+              </select>
+            </label>
+
+            <label class="field wide">
+              <span>발생 날짜·시간 (현지 시간)</span>
+              <input name="date" type="datetime-local" step="1" required />
+            </label>
+
+            <label id="storagePlaceField" class="field wide" hidden>
+              <span>현재 보관 장소</span>
+              <input
+                name="storagePlace"
+                placeholder="예: 사당지구대 맡김 / 직접 보관 중"
+              />
+            </label>
+
+            <label class="field wide">
+              <span>특징</span>
+              <textarea
+                name="details"
+                placeholder="색상, 브랜드, 흠집 등 물건의 특징을 적어주세요."
+              ></textarea>
+            </label>
+          </div>
+
+          <div class="form-actions">
+            <button id="deleteBtn" class="btn btn-terracotta" type="button">삭제하기</button>
+            <a class="btn btn-secondary" href="./my-reports.html">취소</a>
+            <button id="submitBtn" class="btn btn-primary" type="submit">수정 완료</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="./js/report-edit.js"></script>
+  </body>
+</html>

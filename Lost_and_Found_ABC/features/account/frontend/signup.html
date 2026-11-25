@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <!-- 회원가입 화면의 제목·공통 스타일·전용 스타일입니다. -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>회원가입 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/account.css" />
+  </head>
+  <body class="form-page">
+    <!-- 공통 JS가 로그인 상태에 맞는 메뉴를 이곳에 만듭니다. -->
+    <header class="account-header" data-account-layout></header>
+    <!-- 본문 입력·조회·버튼 동작은 아래 JS 모듈에서 처리합니다. -->
+    <main class="form-page-main">
+      <section class="form-card auth-card">
+        <span class="eyebrow">JOIN US</span>
+        <h1>회원가입</h1>
+        <p>물건과 주인이 다시 만나는 곳</p>
+        <p id="message" role="status" aria-live="polite" hidden></p>
+        <form id="signupForm">
+          <label class="field">
+            <span>아이디</span>
+            <input
+              name="loginId"
+              autocomplete="username"
+              minlength="4"
+              maxlength="30"
+              pattern="[a-zA-Z0-9_-]+"
+              title="영문·숫자·밑줄·하이픈 4~30자"
+              required
+            />
+            <small>영문·숫자·밑줄·하이픈 4~30자. 대소문자를 구분합니다.</small>
+          </label>
+          <label class="field">
+            <span>이름</span>
+            <input name="name" autocomplete="name" maxlength="50" required />
+          </label>
+          <label class="field">
+            <span>이메일</span>
+            <input name="email" type="email" autocomplete="email" maxlength="254" required />
+          </label>
+          <label class="field">
+            <span>비밀번호</span>
+            <input
+              name="password"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="128"
+              required
+            />
+            <small>8~128자로 입력하세요.</small>
+          </label>
+          <label class="field">
+            <span>비밀번호 확인</span>
+            <input
+              name="confirmPassword"
+              type="password"
+              autocomplete="new-password"
+              minlength="8"
+              maxlength="128"
+              required
+            />
+          </label>
+          <button type="submit" class="btn btn-primary full">가입하기</button>
+        </form>
+        <p class="account-note">
+          이미 가입하셨나요?
+          <a href="./login.html">로그인</a>
+        </p>
+      </section>
+    </main>
+    <!-- type="module"로 공통 함수를 import할 수 있게 합니다. -->
+    <script type="module" src="./js/signup.js"></script>
+  </body>
+</html>

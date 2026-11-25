@@ -1,0 +1,1082 @@
+
+/* ========================================
+   [C] 검색·매칭·통계 페이지 전용 스타일
+   ======================================== */
+
+:root {
+    --discovery-bg: #f3eee7;
+    --discovery-paper: #fffefa;
+    --discovery-brown: #946348;
+    --discovery-dark: #634a3a;
+    --discovery-line: #e1d8ce;
+    --discovery-sage: #71866e;
+    --discovery-sage-soft: #e8eee5;
+    --discovery-muted: #79766f;
+    --discovery-red: #ab5c50;
+    --discovery-red-soft: #f8e8e4;
+}
+
+/* 숨겨진 요소 유지 */
+
+[hidden] {
+    display: none !important;
+}
+
+
+/* ========================================
+   1. 메인 화면
+   ======================================== */
+
+#homeMatchCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 22px;
+    padding: 26px;
+    background: var(--discovery-paper);
+    border: 1px solid var(--discovery-line);
+    border-radius: 20px;
+    margin-bottom: 30px;
+}
+
+#matchMessage {
+    flex: 1;
+    min-width: 200px;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.home-match-count {
+    margin: 0 0 8px;
+    color: var(--discovery-muted);
+    font-size: 12px;
+}
+
+.home-match-title {
+    display: block;
+    font-size: 22px;
+    color: var(--discovery-dark);
+    word-break: keep-all;
+}
+
+.home-match-score {
+    margin: 8px 0;
+    font-size: 25px;
+    font-weight: 800;
+    color: var(--discovery-sage);
+}
+
+.home-match-place {
+    margin: 0;
+    font-size: 13px;
+    color: var(--discovery-muted);
+}
+
+#homeMatchesLink {
+    flex-shrink: 0;
+    font-size: 13px;
+    text-decoration: none;
+}
+
+.found-card {
+    color: inherit;
+    text-decoration: none;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
+}
+
+.found-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(80, 60, 45, 0.1);
+}
+
+.found-card .found-info {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.found-card .found-info b {
+    font-size: 14px;
+}
+
+#myReportMessage {
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+#myReportsLink {
+    display: inline-block;
+    color: var(--discovery-brown);
+    font-weight: 700;
+    text-decoration: none;
+    margin-top: 8px;
+}
+
+
+/* ========================================
+   2. 하위 페이지 공통 디자인
+   ======================================== */
+
+body {
+    background: var(--discovery-bg);
+}
+
+main.form-card {
+    width: min(1080px, calc(100% - 40px));
+    margin: 40px auto 60px;
+    padding: 36px;
+    background: var(--discovery-paper);
+    border: 1px solid var(--discovery-line);
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(80, 60, 45, 0.05);
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.form-card h1 {
+    margin: 18px 0 8px;
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--discovery-dark);
+    letter-spacing: -0.04em;
+}
+
+.form-card h2 {
+    margin: 22px 0 15px;
+    font-size: 20px;
+    color: var(--discovery-dark);
+    letter-spacing: -0.03em;
+}
+
+.form-card h3 {
+    margin: 10px 0;
+    font-size: 15px;
+}
+
+.form-card > p {
+    margin: 10px 0 22px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--discovery-muted);
+}
+
+.form-card a {
+    color: var(--discovery-brown);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.form-card a:hover {
+    text-decoration: underline;
+}
+
+.form-card > a:first-child {
+    display: inline-block;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.form-card nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 15px;
+    font-size: 13px;
+}
+
+.form-card hr {
+    margin: 28px 0;
+    border: 0;
+    border-top: 1px solid var(--discovery-line);
+}
+
+
+/* 입력란 및 버튼 */
+
+.form-card label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--discovery-dark);
+}
+
+.form-card input:not([type="checkbox"]):not([type="radio"]),
+.form-card select,
+.form-card textarea {
+    min-width: 0;
+    max-width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--discovery-line);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--ink, #302b26);
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-card input:focus,
+.form-card select:focus,
+.form-card textarea:focus {
+    outline: 2px solid var(--discovery-sage);
+    outline-offset: 2px;
+}
+
+.form-card button,
+.form-card .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 40px;
+    padding: 10px 18px;
+    border: 1px solid var(--discovery-brown);
+    border-radius: 9px;
+    background: var(--discovery-brown);
+    color: white;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.form-card button:hover:not(:disabled),
+.form-card .btn-primary:hover {
+    background: var(--discovery-dark);
+    color: white;
+    text-decoration: none;
+}
+
+.form-card .btn-secondary,
+.form-card #resetButton,
+.form-card #refreshButton,
+.form-card #prevButton,
+.form-card #nextButton {
+    background: #fff;
+    color: var(--discovery-brown);
+    border: 1px solid var(--discovery-line);
+}
+
+.form-card .btn-secondary:hover:not(:disabled),
+.form-card #resetButton:hover:not(:disabled),
+.form-card #refreshButton:hover:not(:disabled),
+.form-card #prevButton:hover:not(:disabled),
+.form-card #nextButton:hover:not(:disabled) {
+    background: var(--discovery-bg);
+    color: var(--discovery-dark);
+    text-decoration: none;
+}
+
+.form-card button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.form-card button:focus-visible,
+.form-card a:focus-visible {
+    outline: 2px solid var(--discovery-sage);
+    outline-offset: 3px;
+}
+
+
+/* 안내 메시지 및 페이지 이동 */
+
+.form-card #message {
+    color: var(--discovery-muted);
+    font-size: 14px;
+    margin: 14px 0;
+}
+
+.form-card #resultCount {
+    font-weight: 700;
+    color: var(--discovery-dark);
+}
+
+.form-card .empty-state {
+    padding: 24px 15px;
+    background: var(--discovery-bg);
+    border-radius: 10px;
+    text-align: center;
+    color: var(--discovery-muted);
+}
+
+#pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 28px;
+}
+
+#pageInfo {
+    font-weight: 700;
+    font-size: 13px;
+}
+
+
+/* ========================================
+   3. 검색 및 필터 페이지
+   ======================================== */
+
+.form-card #searchForm {
+    display: grid;
+    gap: 12px;
+    padding: 22px;
+    margin: 25px 0;
+    background: #f7f4ef;
+    border: 1px solid var(--discovery-line);
+    border-radius: 15px;
+}
+
+.form-card #searchForm input,
+.form-card #searchForm select {
+    width: 100%;
+}
+
+.form-card #searchForm .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.form-card #searchForm label {
+    margin-bottom: 2px;
+}
+
+#searchResults {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.search-result-card {
+    display: block;
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--discovery-line);
+    border-radius: 14px;
+    background: #fff;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.18s ease;
+}
+
+.search-result-card:hover {
+    box-shadow: 0 5px 18px rgba(80, 60, 45, 0.1);
+}
+
+.search-result-card h2,
+.search-result-card h3 {
+    margin: 8px 0;
+}
+
+.search-result-card p {
+    margin: 5px 0;
+    color: var(--discovery-muted);
+    font-size: 13px;
+}
+
+.search-result-card img {
+    display: block;
+    width: 100%;
+    height: 180px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-bottom: 12px;
+}
+
+
+/* ========================================
+   4. 신고 상세 페이지
+   ======================================== */
+
+#reportDetail {
+    padding-top: 10px;
+}
+
+#reportDetail #itemName {
+    font-size: 27px;
+    color: var(--discovery-dark);
+}
+
+#reportDetail dl {
+    display: grid;
+    grid-template-columns: minmax(90px, 150px) minmax(0, 1fr);
+    margin: 25px 0;
+    border-top: 1px solid var(--discovery-line);
+}
+
+#reportDetail dt,
+#reportDetail dd {
+    padding: 13px 12px;
+    border-bottom: 1px solid var(--discovery-line);
+    margin: 0;
+}
+
+#reportDetail dt {
+    font-weight: 700;
+    background: #f7f4ef;
+    color: var(--discovery-dark);
+}
+
+#reportDetail dd {
+    color: var(--ink, #302b26);
+}
+
+#reportPhotos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    margin: 20px 0;
+}
+
+#reportPhotos img {
+    display: block;
+    width: 100%;
+    max-height: 360px;
+    object-fit: contain;
+    background: var(--discovery-bg);
+    border-radius: 14px;
+}
+
+#description {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+#matchesLink,
+#handoverLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 17px;
+    margin: 10px 8px 0 0;
+    border-radius: 9px;
+    background: var(--discovery-brown);
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#matchesLink:hover,
+#handoverLink:hover {
+    background: var(--discovery-dark);
+}
+
+
+/* ========================================
+   5. 유사 물품 매칭
+   ======================================== */
+
+#reportSelect {
+    width: min(100%, 420px);
+    margin: 6px 8px;
+}
+
+#matchResults,
+#adminMatchResults {
+    display: grid;
+    gap: 22px;
+    margin-top: 20px;
+}
+
+.form-card .match-card {
+    display: block;
+    padding: 24px;
+    margin: 0;
+    background: #fff;
+    border: 1px solid var(--discovery-line);
+    border-radius: 17px;
+    min-width: 0;
+}
+
+.form-card .match-card > h2,
+.form-card .match-score {
+    font-size: 26px;
+    font-weight: 800;
+    margin: 0 0 12px;
+    color: var(--discovery-sage);
+}
+
+.form-card .match-card .comparison {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.match-report-panel {
+    min-width: 0;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f6f2ed;
+    border: 1px solid var(--discovery-line);
+}
+
+.match-report-panel:last-child {
+    background: var(--discovery-sage-soft);
+}
+
+.match-report-panel h3 {
+    margin: 0 0 10px;
+    color: var(--discovery-muted);
+    font-size: 12px;
+}
+
+.match-report-panel strong {
+    display: block;
+    margin-bottom: 12px;
+    font-size: 19px;
+    color: var(--discovery-dark);
+}
+
+.match-report-panel p {
+    margin: 7px 0;
+    font-size: 13px;
+    color: #625e57;
+}
+
+.match-report-panel a {
+    display: inline-block;
+    margin-top: 12px;
+    font-size: 12px;
+}
+
+.form-card ul.match-factors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 12px 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.form-card .match-factors li {
+    padding: 7px 12px;
+    background: var(--discovery-sage-soft);
+    color: #4f6d4d;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 7px;
+}
+
+.form-card .match-card > p {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--discovery-muted);
+}
+
+.form-card .match-card > .btn {
+    margin-top: 12px;
+}
+
+
+/* ========================================
+   6. 관리자 매칭 관리
+   ======================================== */
+
+.admin-filter {
+    padding: 20px;
+    margin: 25px 0;
+    border: 1px solid var(--discovery-line);
+    border-radius: 12px;
+    background: #f7f4ef;
+}
+
+.admin-filter h2 {
+    margin-top: 0;
+}
+
+#statusFilter {
+    min-width: 160px;
+    margin: 6px 8px;
+}
+
+.admin-match-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.admin-match-heading h2 {
+    margin: 0;
+    font-size: 21px;
+}
+
+.form-card .status {
+    display: inline-block;
+    width: fit-content;
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--discovery-sage-soft);
+    color: var(--discovery-sage);
+}
+
+.form-card .match-status-candidate {
+    background: #f4e9d5;
+    color: #8b6a32;
+}
+
+.form-card .match-status-confirmed {
+    background: #e3eee2;
+    color: #4b774a;
+}
+
+.form-card .match-status-rejected {
+    background: var(--discovery-red-soft);
+    color: var(--discovery-red);
+}
+
+.review-info {
+    padding: 15px 18px;
+    background: #f7f4ef;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+.review-info p {
+    margin: 4px 0;
+    font-size: 12px;
+    color: var(--discovery-muted);
+}
+
+.admin-match-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid var(--discovery-line);
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+.admin-match-actions > p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--discovery-muted);
+}
+
+
+/* ========================================
+   7. 관리자 통계
+   ======================================== */
+
+main.admin-stats-page {
+    width: min(1180px, calc(100% - 40px));
+}
+
+.stats-filter {
+    padding: 24px;
+    margin: 25px 0;
+    border: 1px solid var(--discovery-line);
+    border-radius: 15px;
+    background: #f7f4ef;
+}
+
+.stats-filter h2 {
+    margin-top: 0;
+}
+
+#filterForm {
+    display: grid;
+    grid-template-columns: 100px minmax(0, 1fr)
+                           100px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+}
+
+#filterForm input,
+#filterForm select {
+    width: 100%;
+}
+
+#filterForm #searchButton {
+    grid-column: 2;
+}
+
+#filterForm #resetButton {
+    grid-column: 4;
+}
+
+.stats-filter > p {
+    color: var(--discovery-muted);
+    font-size: 12px;
+    margin: 14px 0 0;
+}
+
+.stats-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.stat-card {
+    min-width: 0;
+    padding: 22px;
+    border-radius: 14px;
+    border: 1px solid var(--discovery-line);
+    background: #fff;
+    border-top: 4px solid var(--discovery-brown);
+}
+
+.stat-card:nth-child(3n + 2) {
+    border-top-color: var(--discovery-sage);
+}
+
+.stat-card:nth-child(3n) {
+    border-top-color: #c4a575;
+}
+
+.stat-card h3 {
+    font-size: 13px;
+    color: var(--discovery-muted);
+    font-weight: 600;
+    margin: 0 0 10px;
+}
+
+.stat-card strong {
+    display: block;
+    font-size: 30px;
+    color: var(--discovery-dark);
+    font-weight: 800;
+}
+
+.stats-section {
+    margin-top: 25px;
+    padding: 25px;
+    background: white;
+    border: 1px solid var(--discovery-line);
+    border-radius: 15px;
+}
+
+.stats-section h2 {
+    margin: 0 0 20px;
+}
+
+
+/* 막대 그래프 */
+
+.stats-chart-row {
+    display: grid;
+    grid-template-columns: minmax(70px, 125px)
+                           minmax(0, 1fr)
+                           minmax(100px, auto);
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+}
+
+.stats-chart-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--discovery-dark);
+}
+
+.stats-chart-value {
+    text-align: right;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--discovery-muted);
+}
+
+.stats-chart-progress {
+    display: block;
+    width: 100%;
+    height: 14px;
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #eee9e2;
+}
+
+.stats-chart-progress::-webkit-progress-bar {
+    background: #eee9e2;
+    border-radius: 8px;
+}
+
+.stats-chart-progress::-webkit-progress-value {
+    background: var(--discovery-sage);
+    border-radius: 8px;
+}
+
+.stats-chart-progress::-moz-progress-bar {
+    background: var(--discovery-sage);
+    border-radius: 8px;
+}
+
+#typeChart .stats-chart-row:first-child
+.stats-chart-progress::-webkit-progress-value {
+    background: var(--discovery-brown);
+}
+
+#typeChart .stats-chart-row:first-child
+.stats-chart-progress::-moz-progress-bar {
+    background: var(--discovery-brown);
+}
+
+
+/* 통계 표 */
+
+.stats-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 22px;
+}
+
+.stats-table {
+    width: 100%;
+    min-width: 320px;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.stats-table th,
+.stats-table td {
+    padding: 13px;
+    border-bottom: 1px solid var(--discovery-line);
+    text-align: center;
+}
+
+.stats-table th {
+    color: var(--discovery-dark);
+    background: #f4efe8;
+    font-weight: 700;
+}
+
+.stats-table td {
+    color: #625e57;
+}
+
+.stats-table tbody tr:nth-child(even) {
+    background: #faf8f4;
+}
+
+.stats-table tbody tr:hover {
+    background: var(--discovery-sage-soft);
+}
+
+
+/* 인계 완료율 */
+
+.completion-card {
+    padding: 22px;
+    border-radius: 12px;
+    background: var(--discovery-sage-soft);
+}
+
+#completionRate {
+    display: block;
+    color: var(--discovery-sage);
+    font-size: 34px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+#completionProgress {
+    display: block;
+    width: 100%;
+    height: 18px;
+    border: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #dce3d8;
+}
+
+#completionProgress::-webkit-progress-bar {
+    background: #dce3d8;
+    border-radius: 10px;
+}
+
+#completionProgress::-webkit-progress-value {
+    background: var(--discovery-sage);
+    border-radius: 10px;
+}
+
+#completionProgress::-moz-progress-bar {
+    background: var(--discovery-sage);
+    border-radius: 10px;
+}
+
+#completionDescription {
+    color: var(--discovery-muted);
+    font-size: 13px;
+    margin: 12px 0 0;
+}
+
+.stats-section > ul {
+    padding-left: 20px;
+    color: var(--discovery-muted);
+    font-size: 13px;
+    line-height: 1.9;
+}
+
+
+/* ========================================
+   8. 반응형 디자인
+   ======================================== */
+
+@media (max-width: 850px) {
+
+    main.form-card,
+    main.admin-stats-page {
+        width: calc(100% - 30px);
+        margin: 25px auto;
+        padding: 25px;
+    }
+
+    .stats-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    #filterForm {
+        grid-template-columns: 100px minmax(0, 1fr);
+    }
+
+    #filterForm #searchButton,
+    #filterForm #resetButton {
+        grid-column: 2;
+    }
+
+    #homeMatchCard {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 620px) {
+
+    main.form-card,
+    main.admin-stats-page {
+        width: calc(100% - 24px);
+        padding: 20px 16px;
+        margin: 15px auto 30px;
+        border-radius: 14px;
+    }
+
+    .form-card h1 {
+        font-size: 24px;
+    }
+
+    .form-card h2 {
+        font-size: 18px;
+    }
+
+    #homeMatchCard {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 20px;
+    }
+
+    #homeMatchesLink {
+        align-self: flex-start;
+    }
+
+    .home-match-title {
+        font-size: 19px;
+    }
+
+    #searchResults,
+    #reportPhotos,
+    .form-card #searchForm .form-grid,
+    .form-card .match-card .comparison {
+        grid-template-columns: 1fr;
+    }
+
+    .form-card .match-card {
+        padding: 16px;
+    }
+
+    .match-report-panel {
+        padding: 16px;
+    }
+
+    #reportSelect,
+    #statusFilter {
+        width: 100%;
+        margin: 7px 0;
+    }
+
+    .admin-match-actions {
+        justify-content: stretch;
+    }
+
+    .admin-match-actions button {
+        flex: 1;
+    }
+
+    .stats-summary-grid {
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-card h3 {
+        font-size: 12px;
+    }
+
+    .stat-card strong {
+        font-size: 24px;
+    }
+
+    .stats-section,
+    .stats-filter {
+        padding: 16px;
+    }
+
+    #filterForm {
+        grid-template-columns: 1fr;
+    }
+
+    #filterForm #searchButton,
+    #filterForm #resetButton {
+        grid-column: 1;
+    }
+
+    .stats-chart-row {
+        grid-template-columns: 1fr auto;
+        gap: 6px;
+    }
+
+    .stats-chart-label {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .stats-chart-value {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .stats-chart-progress {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    #reportDetail dl {
+        grid-template-columns: 90px minmax(0, 1fr);
+    }
+
+    .stats-table th,
+    .stats-table td {
+        padding: 10px 6px;
+        font-size: 12px;
+    }
+}
