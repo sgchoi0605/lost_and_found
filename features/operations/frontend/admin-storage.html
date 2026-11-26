@@ -1,6 +1,93 @@
-<!doctype html>
-<html lang="ko"><head>
-    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. --><meta charset="UTF-8"><title>admin-storage</title><link rel="stylesheet" href="../../../shared/frontend/css/base.css"><link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/operations.css"></head><body>
-<!-- 담당 기능을 구현할 자리입니다. 메인 링크로 기존 화면에 돌아갈 수 있습니다. -->
-<main class="form-card"><h1>admin-storage</h1><p>D 담당 화면 — 구현 예정</p><a href="/features/discovery/frontend/index.html">메인</a></main><!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
-    <script type="module" src="./js/admin-storage.js"></script></body></html>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>보관 관리</title>
+
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
+    <link rel="stylesheet" href="./css/operations.css">
+
+    <script type="module" src="./js/admin-storage.js"></script>
+</head>
+
+<body>
+    <main class="storage-container">
+
+        <header class="page-header">
+            <h1>보관 관리</h1>
+            <p>습득물의 보관 현황을 확인하고 관리합니다.</p>
+        </header>
+
+        <!-- 보관 현황 통계 -->
+        <section class="storage-summary">
+            <div class="summary-card">
+                <h3>전체 보관 물품</h3>
+                <p id="total-count">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>보관 중</h3>
+                <p id="stored-count">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>인계 대기</h3>
+                <p id="pending-count">0</p>
+            </div>
+        </section>
+
+        <!-- 보관 물품 목록 -->
+        <section class="storage-list">
+
+            <h2>보관 물품 목록</h2>
+
+            <!-- 검색 및 상태 필터 -->
+            <div class="storage-filters">
+                <input
+                    type="search"
+                    id="search-input"
+                    placeholder="물품 이름 검색"
+                    aria-label="물품 이름 검색"
+                >
+
+                <select
+                    id="status-filter"
+                    aria-label="보관 상태 필터"
+                >
+                    <option value="all">전체 상태</option>
+                    <option value="보관 중">보관 중</option>
+                    <option value="인계 대기">인계 대기</option>
+                    <option value="인계 완료">인계 완료</option>
+                </select>
+            </div>
+
+            <!-- 보관 물품 테이블 -->
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">물품명</th>
+                            <th scope="col">습득 날짜</th>
+                            <th scope="col">보관 장소</th>
+                            <th scope="col">보관 상태</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="storage-table-body"></tbody>
+                </table>
+            </div>
+
+            <!-- 등록된 물품이 없을 때 -->
+            <p id="empty-message" hidden>
+                등록된 보관 물품이 없습니다.
+            </p>
+
+        </section>
+
+    </main>
+</body>
+</html>
