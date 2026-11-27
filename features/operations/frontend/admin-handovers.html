@@ -1,6 +1,97 @@
-<!doctype html>
-<html lang="ko"><head>
-    <!-- 화면 제목과 공통·기능별 스타일을 불러오는 설정입니다. --><meta charset="UTF-8"><title>admin-handovers</title><link rel="stylesheet" href="../../../shared/frontend/css/base.css"><link rel="stylesheet" href="../../../shared/frontend/css/components.css"><link rel="stylesheet" href="./css/operations.css"></head><body>
-<!-- 담당 기능을 구현할 자리입니다. 메인 링크로 기존 화면에 돌아갈 수 있습니다. -->
-<main class="form-card"><h1>admin-handovers</h1><p>D 담당 화면 — 구현 예정</p><a href="/features/discovery/frontend/index.html">메인</a></main><!-- 이 화면의 이벤트를 처리하는 JS 모듈을 연결합니다. -->
-    <script type="module" src="./js/admin-handovers.js"></script></body></html>
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>인계 신청 관리</title>
+
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
+    <link rel="stylesheet" href="./css/operations.css">
+
+    <script type="module" src="./js/admin-handovers.js"></script>
+</head>
+
+<body>
+    <main class="handovers-container">
+
+        <header class="handovers-header">
+            <h1>인계 신청 관리</h1>
+            <p>접수된 인계 신청을 확인하고 관리합니다.</p>
+        </header>
+
+        <!-- 신청 통계 -->
+        <section class="handovers-summary">
+            <div class="summary-card">
+                <h3>전체 신청</h3>
+                <p id="all-count">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>인계 대기</h3>
+                <p id="waiting-count">0</p>
+            </div>
+
+            <div class="summary-card">
+                <h3>인계 완료</h3>
+                <p id="completed-count">0</p>
+            </div>
+        </section>
+
+        <!-- 신청 목록 -->
+        <section class="handovers-list">
+            <h2>인계 신청 목록</h2>
+
+            <!-- 검색 및 상태 필터 -->
+            <div class="handovers-filters">
+                <input
+                    type="search"
+                    id="handover-search"
+                    placeholder="물품명 또는 신청자 이름 검색"
+                    aria-label="물품명 또는 신청자 이름 검색"
+                >
+
+                <select
+                    id="handover-filter"
+                    aria-label="신청 상태 필터"
+                >
+                    <option value="all">전체 상태</option>
+                    <option value="인계 대기">인계 대기</option>
+                    <option value="인계 승인 완료">인계 승인 완료</option>
+                    <option value="신청 거절">신청 거절</option>
+                    <option value="인계 완료">인계 완료</option>
+                </select>
+            </div>
+
+            <!-- 신청 테이블 -->
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">물품명</th>
+                            <th scope="col">신청자</th>
+                            <th scope="col">신청 날짜</th>
+                            <th scope="col">신청 상태</th>
+                            <th scope="col">상세 보기</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="handovers-table-body"></tbody>
+                </table>
+            </div>
+
+            <!-- 데이터가 없을 때 -->
+            <p id="handovers-empty-message" hidden>
+                등록된 인계 신청이 없습니다.
+            </p>
+        </section>
+
+        <a class="back-link" href="../../discovery/frontend/index.html">
+            메인으로 돌아가기
+        </a>
+
+    </main>
+</body>
+</html>
