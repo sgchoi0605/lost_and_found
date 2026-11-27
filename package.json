@@ -22,6 +22,7 @@
     "format": "oxfmt",
     "test:reports": "node scripts/test.mjs features/reports/reports.test.js",
     "test:discovery": "node scripts/test.mjs features/discovery/discovery.test.js",
+    "test:operations": "node scripts/test.mjs features/operations/operations.test.js",
     "test:integration": "node scripts/test.mjs tests/integration.test.js"
   },
   "devDependencies": {

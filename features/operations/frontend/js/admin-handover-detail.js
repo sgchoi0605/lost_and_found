@@ -1,409 +1,300 @@
+// [D] 관리자 인계 신청 상세 조회, 보관 정보 저장(storage_records), 정방향 심사·인계 완료를 처리합니다.
 
-// URL-аас хүсэлтийн ID авах
+import { api } from '../../../../shared/frontend/js/api.js';
+import { requireUser } from '../../../../shared/frontend/js/auth-guard.js';
+import { showToast } from '../../../../shared/frontend/js/toast.js';
+import {
+  HANDOVER_STATUS_MAP,
+  REPORT_STATUS_LABELS,
+  STORAGE_STATUS_MAP,
+  createBadge,
+  extractContactAndProof,
+  formatDateTime,
+  setMessage,
+  toDateInputValue,
+  toLocalDateTime,
+  toUtcDateTime,
+} from './operations-common.js';
+
+const main = document.querySelector('main');
+const pageMessage = document.getElementById('page-message');
+const detailSections = document.getElementById('detail-sections');
+
+const storageInfoForm = document.getElementById('storage-info-form');
+const storageLocationInput = document.getElementById('storage-location-input');
+const storageDeadlineInput = document.getElementById('storage-deadline-input');
+const saveStorageButton = document.getElementById('save-storage-button');
+const reportDetailLink = document.getElementById('report-detail-link');
+const storageInfoMessage = document.getElementById('storage-info-message');
+
+const applicationStatus = document.getElementById('application-status');
+const reviewInfo = document.getElementById('review-info');
+const reviewNoteInput = document.getElementById('review-note-input');
+const reviewButton = document.getElementById('review-button');
+const approveButton = document.getElementById('approve-button');
+const rejectButton = document.getElementById('reject-button');
+const resultMessage = document.getElementById('result-message');
+
+const completeForm = document.getElementById('complete-form');
+const recipientNameInput = document.getElementById('recipient-name-input');
+const completionDateInput = document.getElementById('completion-date-input');
+const completeHandoverButton = document.getElementById('complete-handover-button');
+const completionMessage = document.getElementById('completion-message');
+
 const params = new URLSearchParams(window.location.search);
-const requestId = params.get("id");
+const requestIdParam = params.get('id');
 
-// ID байхгүй бол хүсэлтийн жагсаалт руу буцах
-if (!requestId) {
-    window.location.replace("./admin-handovers.html");
+let currentHandover = null;
+
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) {
+    node.textContent = value;
+  }
 }
 
-// localStorage мэдээлэл авах
-function getStorageData(key, fallback) {
+function renderDetail(item) {
+  currentHandover = item;
+
+  setText('item-name', item.found_item_name);
+  setText('item-meta', `${item.found_category} · ${item.found_place}`);
+  setText('found-date-text', formatDateTime(item.found_occurred_at));
+  setText('found-status-text', REPORT_STATUS_LABELS[item.found_status] || item.found_status);
+  setText('reported-storage-text', item.found_storage_place || '미입력');
+  setText(
+    'linked-lost-text',
+    item.lost_report_id ? `#${item.lost_report_id} ${item.lost_item_name || ''}` : '연결 없음',
+  );
+  reportDetailLink.href = `/features/discovery/frontend/report-detail.html?id=${encodeURIComponent(item.found_report_id)}`;
+
+  const hasStorage = Boolean(item.storage_id);
+  const canEditStorage =
+    (hasStorage && item.storage_status === 'STORED') ||
+    (!hasStorage && !['HANDED_OVER', 'DISPOSED', 'TRANSFERRED'].includes(item.found_status));
+
+  storageLocationInput.value = item.record_storage_place || item.found_storage_place || '';
+  storageDeadlineInput.value = toDateInputValue(item.storage_deadline);
+  storageLocationInput.disabled = !canEditStorage;
+  storageDeadlineInput.disabled = !canEditStorage;
+  saveStorageButton.disabled = !canEditStorage;
+  saveStorageButton.textContent = hasStorage ? '보관 정보 수정' : '보관 기록 접수';
+
+  if (hasStorage && !canEditStorage) {
+    const stLabel = STORAGE_STATUS_MAP[item.storage_status]?.label || item.storage_status;
+    setMessage(storageInfoMessage, `보관 기록이 종료(${stLabel})되어 수정할 수 없습니다.`);
+  } else if (!hasStorage && canEditStorage) {
+    setMessage(
+      storageInfoMessage,
+      '아직 보관 기록(storage_records)이 없습니다. 저장 시 보관 기록으로 접수됩니다.',
+    );
+  } else {
+    setMessage(storageInfoMessage, '');
+  }
+
+  const { contact, proof } = extractContactAndProof(item.ownership_proof);
+  setText('applicant-name', `${item.requester_name} (${item.requester_login_id})`);
+  setText('applicant-email', item.requester_email || '정보 없음');
+  setText('applicant-contact', contact || '미입력');
+  setText('applied-at', formatDateTime(item.created_at));
+  setText('application-reason', proof || '없음');
+
+  const statusInfo = HANDOVER_STATUS_MAP[item.status] || {
+    label: item.status,
+    badgeClass: 'ops-badge-closed',
+  };
+  applicationStatus.replaceChildren(createBadge(statusInfo.label, statusInfo.badgeClass));
+
+  reviewInfo.textContent = item.reviewed_at
+    ? `${item.reviewer_name || '관리자'} · ${formatDateTime(item.reviewed_at)}`
+    : '미검토';
+  reviewNoteInput.value = item.review_note || '';
+
+  const isRequested = item.status === 'REQUESTED';
+  const isUnderReview = item.status === 'UNDER_REVIEW';
+  const isApproved = item.status === 'APPROVED';
+  const isCompleted = item.status === 'COMPLETED';
+  const canReview = isRequested || isUnderReview;
+
+  reviewNoteInput.disabled = !canReview;
+  reviewButton.disabled = !isRequested;
+  approveButton.disabled = !canReview;
+  rejectButton.disabled = !canReview;
+
+  recipientNameInput.value = item.recipient_name || '';
+  completionDateInput.value = toLocalDateTime(item.completed_at);
+  recipientNameInput.disabled = !isApproved;
+  completionDateInput.disabled = !isApproved;
+  completeHandoverButton.disabled = !isApproved;
+
+  if (isCompleted) {
+    setMessage(
+      completionMessage,
+      `인계 완료: ${formatDateTime(item.completed_at)} / 수령자: ${item.recipient_name}`,
+      'ok',
+    );
+  } else if (isApproved) {
+    setMessage(
+      completionMessage,
+      '승인 완료 상태입니다. 실제 수령 후 수령자 이름과 완료 일시를 기록해주세요.',
+    );
+  } else {
+    setMessage(
+      completionMessage,
+      '인계 승인(APPROVED) 상태에서만 실물 인계 완료를 처리할 수 있습니다.',
+    );
+  }
+
+  detailSections.hidden = false;
+}
+
+async function loadDetail() {
+  setMessage(pageMessage, '인계 신청 상세를 불러오는 중입니다...');
+  try {
+    const data = await api(`/api/operations/admin/handovers/${requestIdParam}`);
+    setMessage(pageMessage, '');
+    renderDetail(data);
+  } catch (error) {
+    setMessage(pageMessage, error.message, 'error');
+    detailSections.hidden = true;
+    showToast(error.message);
+  }
+}
+
+async function handleReview(nextStatus) {
+  if (!currentHandover) {
+    return;
+  }
+  const reviewNote = reviewNoteInput.value.trim();
+  reviewButton.disabled = true;
+  approveButton.disabled = true;
+  rejectButton.disabled = true;
+  setMessage(resultMessage, '상태를 변경하는 중입니다...');
+
+  try {
+    const updated = await api(`/api/operations/admin/handovers/${currentHandover.request_id}/status`, {
+      method: 'PATCH',
+      body: {
+        status: nextStatus,
+        ...(reviewNote ? { reviewNote } : {}),
+      },
+    });
+    const label = HANDOVER_STATUS_MAP[nextStatus]?.label || nextStatus;
+    showToast(`신청 상태가 '${label}'(으)로 변경되었습니다.`);
+    setMessage(resultMessage, `신청 상태가 '${label}'(으)로 변경되었습니다.`, 'ok');
+    renderDetail(updated);
+  } catch (error) {
+    setMessage(resultMessage, error.message, 'error');
+    showToast(error.message);
+    renderDetail(currentHandover);
+  }
+}
+
+async function init() {
+  const admin = await requireUser({ admin: true });
+  if (!admin) {
+    return;
+  }
+
+  if (
+    !requestIdParam ||
+    !/^[1-9]\d*$/.test(requestIdParam) ||
+    !Number.isSafeInteger(Number(requestIdParam))
+  ) {
+    window.location.replace('./admin-handovers.html');
+    return;
+  }
+
+  main.hidden = false;
+
+  storageInfoForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!currentHandover) {
+      return;
+    }
+    const storagePlace = storageLocationInput.value.trim();
+    const storageDeadline = storageDeadlineInput.value || undefined;
+    if (!storagePlace) {
+      setMessage(storageInfoMessage, '보관 장소를 입력해주세요.', 'error');
+      return;
+    }
+
+    saveStorageButton.disabled = true;
+    setMessage(storageInfoMessage, '보관 정보를 저장하는 중입니다...');
+
     try {
-        const data = JSON.parse(localStorage.getItem(key));
-        return data ?? fallback;
-    } catch {
-        return fallback;
+      if (currentHandover.storage_id) {
+        await api(`/api/operations/admin/storage/${currentHandover.storage_id}`, {
+          method: 'PATCH',
+          body: {
+            storagePlace,
+            ...(storageDeadline ? { storageDeadline } : {}),
+          },
+        });
+      } else {
+        await api('/api/operations/admin/storage', {
+          method: 'POST',
+          body: {
+            foundReportId: currentHandover.found_report_id,
+            storagePlace,
+            ...(storageDeadline ? { storageDeadline } : {}),
+          },
+        });
+      }
+      showToast('보관 정보가 저장되었습니다.');
+      setMessage(storageInfoMessage, '보관 정보가 저장되었습니다.', 'ok');
+      await loadDetail();
+    } catch (error) {
+      setMessage(storageInfoMessage, error.message, 'error');
+      showToast(error.message);
+      saveStorageButton.disabled = false;
     }
+  });
+
+  reviewButton.addEventListener('click', () => handleReview('UNDER_REVIEW'));
+  approveButton.addEventListener('click', () => handleReview('APPROVED'));
+  rejectButton.addEventListener('click', () => {
+    if (window.confirm('이 인계 신청을 거절하시겠습니까? 습득물 상태는 신청 이전 상태로 복원됩니다.')) {
+      handleReview('REJECTED');
+    }
+  });
+
+  completeForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!currentHandover) {
+      return;
+    }
+    const recipientName = recipientNameInput.value.trim();
+    if (!recipientName) {
+      setMessage(completionMessage, '실제 수령자 이름을 입력해주세요.', 'error');
+      return;
+    }
+    const completedAt = toUtcDateTime(completionDateInput.value);
+
+    completeHandoverButton.disabled = true;
+    setMessage(completionMessage, '인계 완료를 기록하는 중입니다...');
+
+    try {
+      const updated = await api(
+        `/api/operations/admin/handovers/${currentHandover.request_id}/complete`,
+        {
+          method: 'POST',
+          body: {
+            recipientName,
+            ...(completedAt ? { completedAt } : {}),
+          },
+        },
+      );
+      showToast('실물 인계 완료 처리가 저장되었습니다.');
+      setMessage(resultMessage, '인계 완료 처리가 저장되었습니다.', 'ok');
+      renderDetail(updated);
+    } catch (error) {
+      setMessage(completionMessage, error.message, 'error');
+      showToast(error.message);
+      completeHandoverButton.disabled = false;
+    }
+  });
+
+  await loadDetail();
 }
 
-// HTML элементүүд
-const detailContainer = document.querySelector(".detail-container");
-
-const itemName = document.getElementById("item-name");
-const foundDateInput = document.getElementById("found-date-input");
-const storageLocationInput = document.getElementById("storage-location-input");
-const saveItemInfoButton = document.getElementById("save-item-info-button");
-const itemInfoMessage = document.getElementById("item-info-message");
-
-const applicantName = document.getElementById("applicant-name");
-const applicantContact = document.getElementById("applicant-contact");
-const applicationReason = document.getElementById("application-reason");
-
-const approveButton = document.getElementById("approve-button");
-const rejectButton = document.getElementById("reject-button");
-const resetStatusButton = document.getElementById("reset-status-button");
-
-const applicationStatus = document.getElementById("application-status");
-const resultMessage = document.getElementById("result-message");
-
-const completionDateInput =
-    document.getElementById("completion-date-input");
-
-const recipientNameInput =
-    document.getElementById("recipient-name-input");
-
-const completeHandoverButton =
-    document.getElementById("complete-handover-button");
-
-const completionMessage =
-    document.getElementById("completion-message");
-
-// Хадгалсан мэдээллүүд
-const newApplications = getStorageData(
-    "newHandoverApplications",
-    []
-);
-
-const savedStatuses = getStorageData(
-    "handoverStatuses",
-    {}
-);
-
-const savedItemDetails = getStorageData(
-    "handoverItemDetails",
-    {}
-);
-
-const completionDetails = getStorageData(
-    "handoverCompletionDetails",
-    {}
-);
-
-// Зөвхөн бодит хүсэлт ашиглах
-const allHandoverItems = Array.isArray(newApplications)
-    ? newApplications
-    : [];
-
-// Сонгосон хүсэлтийг олох
-const selectedItem = allHandoverItems.find(
-    item => String(item.id) === String(requestId)
-);
-
-// Одоогийн төлөв авах
-function getCurrentStatus() {
-    if (!selectedItem) return "";
-
-    return savedStatuses[String(requestId)] ||
-        selectedItem.status ||
-        "인계 대기";
-}
-
-// Мэдээлэл харуулах
-function renderDetail() {
-    if (!selectedItem) {
-        if (detailContainer) {
-            detailContainer.textContent =
-                "해당 신청을 찾을 수 없습니다.";
-        }
-        return;
-    }
-
-    const id = String(requestId);
-
-    const itemDetails = savedItemDetails[id] || {};
-    const completion = completionDetails[id] || {};
-
-    // Барааны мэдээлэл
-    if (itemName) {
-        itemName.textContent =
-            selectedItem.itemName || "물품 정보 없음";
-    }
-
-    if (foundDateInput) {
-        const savedFoundDate =
-            itemDetails.foundDate ||
-            selectedItem.foundDate ||
-            "";
-
-        const isValidDate =
-            /^\d{4}-\d{2}-\d{2}$/.test(savedFoundDate);
-
-        foundDateInput.value = isValidDate
-            ? savedFoundDate
-            : "";
-    }
-
-    if (storageLocationInput) {
-        storageLocationInput.value =
-            itemDetails.location ||
-            selectedItem.location ||
-            "";
-    }
-
-    // Хүсэлт гаргагчийн мэдээлэл
-    if (applicantName) {
-        applicantName.textContent =
-            selectedItem.applicant || "정보 없음";
-    }
-
-    if (applicantContact) {
-        applicantContact.textContent =
-            selectedItem.contact || "정보 없음";
-    }
-
-    if (applicationReason) {
-        applicationReason.textContent =
-            selectedItem.reason || "정보 없음";
-    }
-
-    // Төлөв
-    const currentStatus = getCurrentStatus();
-
-    if (applicationStatus) {
-        applicationStatus.textContent =
-            `현재 상태: ${currentStatus}`;
-    }
-
-    const isPending = currentStatus === "인계 대기";
-    const isApproved = currentStatus === "인계 승인 완료";
-    const isCompleted = currentStatus === "인계 완료";
-
-    if (approveButton) {
-        approveButton.disabled = !isPending;
-    }
-
-    if (rejectButton) {
-        rejectButton.disabled = !isPending;
-    }
-
-    if (resetStatusButton) {
-        resetStatusButton.disabled =
-            isPending || isCompleted;
-    }
-
-    // Бодит хүлээлгэн өгсөн мэдээлэл
-    if (completionDateInput) {
-        completionDateInput.value =
-            completion.completionDate || "";
-
-        completionDateInput.disabled = !isApproved;
-    }
-
-    if (recipientNameInput) {
-        recipientNameInput.value =
-            completion.recipientName || "";
-
-        recipientNameInput.disabled = !isApproved;
-    }
-
-    if (completeHandoverButton) {
-        completeHandoverButton.disabled = !isApproved;
-    }
-
-    if (completionMessage) {
-        if (isCompleted) {
-            completionMessage.textContent =
-                `인계 완료: ${completion.completionDate || "날짜 정보 없음"} / 수령자: ${completion.recipientName || "정보 없음"}`;
-        } else if (isApproved) {
-            completionMessage.textContent =
-                "실제 인계가 끝난 후 날짜와 수령자 이름을 입력해 주세요.";
-        } else {
-            completionMessage.textContent =
-                "인계 승인 완료 상태에서만 실제 인계를 완료할 수 있습니다.";
-        }
-    }
-}
-
-// Барааны мэдээлэл хадгалах
-function saveItemInfo() {
-    if (!selectedItem) return;
-
-    const foundDate = foundDateInput?.value || "";
-    const location = storageLocationInput?.value.trim() || "";
-
-    if (!foundDate || !location) {
-        if (itemInfoMessage) {
-            itemInfoMessage.textContent =
-                "습득 날짜와 보관 장소를 모두 입력해 주세요.";
-        }
-        return;
-    }
-
-    savedItemDetails[String(requestId)] = {
-        foundDate,
-        location
-    };
-
-    localStorage.setItem(
-        "handoverItemDetails",
-        JSON.stringify(savedItemDetails)
-    );
-
-    if (itemInfoMessage) {
-        itemInfoMessage.textContent =
-            "물품 정보가 저장되었습니다.";
-    }
-}
-
-// Хүсэлтийг зөвшөөрөх эсвэл татгалзах
-function updateStatus(newStatus, message) {
-    if (!selectedItem) return;
-
-    if (getCurrentStatus() !== "인계 대기") {
-        if (resultMessage) {
-            resultMessage.textContent =
-                "이미 처리된 신청입니다.";
-        }
-        return;
-    }
-
-    savedStatuses[String(requestId)] = newStatus;
-
-    localStorage.setItem(
-        "handoverStatuses",
-        JSON.stringify(savedStatuses)
-    );
-
-    if (resultMessage) {
-        resultMessage.textContent = message;
-    }
-
-    renderDetail();
-}
-
-// Бодитоор хүлээлгэн өгч дуусгах
-function completeHandover() {
-    if (!selectedItem) return;
-
-    if (getCurrentStatus() !== "인계 승인 완료") {
-        if (completionMessage) {
-            completionMessage.textContent =
-                "먼저 인계 신청을 승인해 주세요.";
-        }
-        return;
-    }
-
-    const completionDate = completionDateInput?.value || "";
-    const recipientName = recipientNameInput?.value.trim() || "";
-
-    if (!completionDate || !recipientName) {
-        if (completionMessage) {
-            completionMessage.textContent =
-                "인계 완료 날짜와 실제 수령자 이름을 모두 입력해 주세요.";
-        }
-        return;
-    }
-
-    const id = String(requestId);
-
-    completionDetails[id] = {
-        completionDate,
-        recipientName
-    };
-
-    localStorage.setItem(
-        "handoverCompletionDetails",
-        JSON.stringify(completionDetails)
-    );
-
-    savedStatuses[id] = "인계 완료";
-
-    localStorage.setItem(
-        "handoverStatuses",
-        JSON.stringify(savedStatuses)
-    );
-
-    if (completionMessage) {
-        completionMessage.textContent =
-            "실제 인계가 완료되었습니다.";
-    }
-
-    if (resultMessage) {
-        resultMessage.textContent =
-            "인계 완료 처리가 저장되었습니다.";
-    }
-
-    renderDetail();
-}
-
-// Төлөвийг буцаах
-function resetStatus() {
-    if (!selectedItem) return;
-
-    const currentStatus = getCurrentStatus();
-
-    if (currentStatus === "인계 대기") {
-        if (resultMessage) {
-            resultMessage.textContent =
-                "이미 대기 상태입니다.";
-        }
-        return;
-    }
-
-    // Бодит 인계 완료 болсон хүсэлтийг буцаахгүй
-    if (currentStatus === "인계 완료") {
-        if (resultMessage) {
-            resultMessage.textContent =
-                "실제 인계가 완료된 신청은 초기화할 수 없습니다.";
-        }
-        return;
-    }
-
-    const id = String(requestId);
-
-    savedStatuses[id] = "인계 대기";
-
-    delete completionDetails[id];
-
-    localStorage.setItem(
-        "handoverStatuses",
-        JSON.stringify(savedStatuses)
-    );
-
-    localStorage.setItem(
-        "handoverCompletionDetails",
-        JSON.stringify(completionDetails)
-    );
-
-    if (resultMessage) {
-        resultMessage.textContent =
-            "신청 상태가 대기 상태로 변경되었습니다.";
-    }
-
-    renderDetail();
-}
-
-// Товчнуудын event
-if (saveItemInfoButton) {
-    saveItemInfoButton.addEventListener(
-        "click",
-        saveItemInfo
-    );
-}
-
-if (approveButton) {
-    approveButton.addEventListener("click", () => {
-        updateStatus(
-            "인계 승인 완료",
-            "인계 신청이 승인되었습니다."
-        );
-    });
-}
-
-if (rejectButton) {
-    rejectButton.addEventListener("click", () => {
-        updateStatus(
-            "신청 거절",
-            "인계 신청이 거절되었습니다."
-        );
-    });
-}
-
-if (resetStatusButton) {
-    resetStatusButton.addEventListener(
-        "click",
-        resetStatus
-    );
-}
-
-if (completeHandoverButton) {
-    completeHandoverButton.addEventListener(
-        "click",
-        completeHandover
-    );
-}
-
-// Эхлүүлэх
-renderDetail();
+init();

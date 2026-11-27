@@ -1,148 +1,194 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>인계 신청 상세 관리 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/operations.css" />
+  </head>
+  <body class="ops-page">
+    <header class="ops-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>인계 신청 상세 관리</small></span>
+      </a>
+      <nav class="ops-nav" aria-label="관리자 메뉴">
+        <a href="/features/discovery/frontend/index.html">홈</a>
+        <a href="./admin-handovers.html">인계 목록</a>
+        <a href="./admin-storage.html">보관 관리</a>
+      </nav>
+    </header>
 
-    <title>인계 신청 상세</title>
+    <main class="ops-main ops-main-narrow" hidden>
+      <div class="ops-title">
+        <span class="eyebrow">HANDOVER DETAIL</span>
+        <h1>인계 신청 상세</h1>
+        <p>소유 증명 내용을 확인하고 정방향 절차(검토·승인/거절 → 실물 인계 완료)에 따라 처리합니다.</p>
+      </div>
 
-    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
-    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
-    <link rel="stylesheet" href="./css/operations.css">
+      <p id="page-message" class="ops-message" role="status" aria-live="polite"></p>
+
+      <div id="detail-sections" hidden>
+        <section class="ops-card">
+          <h2>습득물 및 보관 정보</h2>
+          <div class="ops-detail-list">
+            <div class="ops-detail-row">
+              <span>물품명</span>
+              <strong id="item-name"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>카테고리 / 습득 장소</span>
+              <strong id="item-meta"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>습득 일시</span>
+              <strong id="found-date-text"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>신고 상태</span>
+              <strong id="found-status-text"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>신고자 입력 보관 장소</span>
+              <strong id="reported-storage-text"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>연결 분실 신고</span>
+              <strong id="linked-lost-text"></strong>
+            </div>
+          </div>
+
+          <hr />
+
+          <form id="storage-info-form" class="ops-form">
+            <div class="ops-form-grid">
+              <div class="ops-field">
+                <label for="storage-location-input">실제 보관 장소 (storage_records)</label>
+                <input
+                  type="text"
+                  id="storage-location-input"
+                  maxlength="200"
+                  placeholder="예: 학생회관 분실물 보관함 A-2"
+                />
+              </div>
+              <div class="ops-field">
+                <label for="storage-deadline-input">보관 기한 (선택)</label>
+                <input type="date" id="storage-deadline-input" />
+              </div>
+            </div>
+            <div class="ops-actions">
+              <button type="submit" id="save-storage-button" class="btn btn-secondary">
+                보관 정보 저장
+              </button>
+              <a id="report-detail-link" class="btn btn-secondary" href="/features/discovery/frontend/search.html">
+                습득물 상세 보기
+              </a>
+            </div>
+            <p id="storage-info-message" class="ops-message" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+
+        <section class="ops-card">
+          <h2>신청자 및 소유 증명</h2>
+          <div class="ops-detail-list">
+            <div class="ops-detail-row">
+              <span>신청자</span>
+              <strong id="applicant-name"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>이메일</span>
+              <strong id="applicant-email"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>연락처</span>
+              <strong id="applicant-contact"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>신청 일시</span>
+              <strong id="applied-at"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>소유 증명 내용</span>
+              <p id="application-reason"></p>
+            </div>
+          </div>
+        </section>
+
+        <section class="ops-card">
+          <h2>심사 처리</h2>
+          <div class="ops-detail-list">
+            <div class="ops-detail-row">
+              <span>현재 신청 상태</span>
+              <strong id="application-status"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>최근 검토 정보</span>
+              <strong id="review-info"></strong>
+            </div>
+          </div>
+
+          <div class="ops-form">
+            <div class="ops-field">
+              <label for="review-note-input">검토 메모 (선택)</label>
+              <textarea
+                id="review-note-input"
+                maxlength="500"
+                placeholder="소유 확인 결과나 거절 사유를 입력하세요."
+              ></textarea>
+            </div>
+
+            <div class="ops-actions">
+              <button type="button" id="review-button" class="btn btn-secondary">검토 중으로 변경</button>
+              <button type="button" id="approve-button" class="btn ops-btn-approve">인계 승인</button>
+              <button type="button" id="reject-button" class="btn ops-btn-danger">신청 거절</button>
+            </div>
+
+            <p id="result-message" class="ops-message" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <section class="ops-card">
+          <h2>실물 인계 완료 처리</h2>
+          <p class="ops-message">
+            승인(APPROVED) 이후 실제 수령인이 물품을 받아간 뒤 수령 정보를 기록합니다.
+          </p>
+
+          <form id="complete-form" class="ops-form">
+            <div class="ops-form-grid">
+              <div class="ops-field">
+                <label for="recipient-name-input">실제 수령자 이름 (필수)</label>
+                <input
+                  type="text"
+                  id="recipient-name-input"
+                  maxlength="50"
+                  placeholder="수령자 이름을 입력하세요"
+                />
+              </div>
+              <div class="ops-field">
+                <label for="completion-date-input">인계 완료 일시 (비워두면 현재 시각)</label>
+                <input type="datetime-local" id="completion-date-input" step="1" />
+              </div>
+            </div>
+
+            <div class="ops-actions">
+              <button type="submit" id="complete-handover-button" class="btn btn-primary">
+                인계 완료 처리
+              </button>
+            </div>
+
+            <p id="completion-message" class="ops-message" role="status" aria-live="polite"></p>
+          </form>
+        </section>
+      </div>
+
+      <div class="ops-actions">
+        <a class="btn btn-secondary" href="./admin-handovers.html">← 인계 목록으로 돌아가기</a>
+      </div>
+    </main>
 
     <script type="module" src="./js/admin-handover-detail.js"></script>
-</head>
-
-<body>
-    <main class="detail-container">
-
-        <header class="detail-header">
-            <h1>인계 신청 상세</h1>
-            <p>습득물 인계 신청 내용을 확인하고 처리합니다.</p>
-        </header>
-
-        <!-- 물품 정보 -->
-        <section class="detail-card">
-            <h2>물품 정보</h2>
-
-            <div class="detail-row">
-                <span>물품명</span>
-                <strong id="item-name">정보를 불러오는 중입니다.</strong>
-            </div>
-
-            <div class="detail-row">
-                <label for="found-date-input">습득 날짜</label>
-                <input type="date" id="found-date-input">
-            </div>
-
-            <div class="detail-row">
-                <label for="storage-location-input">보관 장소</label>
-                <input
-                    type="text"
-                    id="storage-location-input"
-                    placeholder="보관 장소를 입력하세요."
-                >
-            </div>
-
-            <button type="button" id="save-item-info-button">
-                물품 정보 저장
-            </button>
-
-            <p id="item-info-message"></p>
-        </section>
-
-        <!-- 신청자 정보 -->
-        <section class="detail-card">
-            <h2>신청자 정보</h2>
-
-            <div class="detail-row">
-                <span>신청자 이름</span>
-                <strong id="applicant-name">정보를 불러오는 중입니다.</strong>
-            </div>
-
-            <div class="detail-row">
-                <span>연락처</span>
-                <strong id="applicant-contact">정보를 불러오는 중입니다.</strong>
-            </div>
-
-            <div class="detail-row">
-                <span>신청 사유</span>
-                <strong id="application-reason">정보를 불러오는 중입니다.</strong>
-            </div>
-        </section>
-
-        <!-- 신청 처리 -->
-        <section class="detail-card">
-            <h2>신청 처리</h2>
-
-            <p id="application-status">
-                신청 정보를 불러오는 중입니다.
-            </p>
-
-            <div class="detail-actions">
-                <button type="button" id="approve-button">
-                    인계 승인
-                </button>
-
-                <button type="button" id="reject-button">
-                    신청 거절
-                </button>
-            </div>
-
-            <button id="reset-status-button" type="button">
-                처리 취소 / 대기 상태로 되돌리기
-            </button>
-
-            <p id="result-message"></p>
-        </section>
-
-        <!-- 실제 인계 완료 처리 -->
-        <section class="detail-card">
-            <h2>실제 인계 완료 처리</h2>
-
-            <p>
-                신청자가 물품을 실제로 수령한 후 완료 정보를 입력하세요.
-            </p>
-
-            <div class="detail-row">
-                <label for="completion-date-input">
-                    인계 완료 날짜 및 시간
-                </label>
-                <input
-                    type="datetime-local"
-                    id="completion-date-input"
-                    disabled
-                >
-            </div>
-
-            <div class="detail-row">
-                <label for="recipient-name-input">
-                    실제 수령자 이름
-                </label>
-                <input
-                    type="text"
-                    id="recipient-name-input"
-                    placeholder="수령자 이름을 입력하세요."
-                    disabled
-                >
-            </div>
-
-            <button
-                type="button"
-                id="complete-handover-button"
-                disabled
-            >
-                인계 완료 처리
-            </button>
-
-            <p id="completion-message"></p>
-        </section>
-
-        <a class="back-link" href="./admin-handovers.html">
-            목록으로 돌아가기
-        </a>
-
-    </main>
-</body>
+  </body>
 </html>

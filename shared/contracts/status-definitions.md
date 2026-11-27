@@ -1,4 +1,4 @@
- > 2026-11-25 ABC 통합판: A/B/C 구현 및 DB v3 반영. D는 미구현입니다. 현재 통합 정책은 docs/ABC_통합결과.md와 각 계약 문서의 ABC 추가 내용을 우선합니다. 아래의 2026-11-15 미구현 표기는 당시 기록입니다.
+ > 2026-11-27 ABCD 통합 진행(1단계 완료): A/B/C 구현 + D 백엔드(`/api/operations`) 구현 및 DB v3 반영. D 프론트엔드 연동은 2단계 예정입니다. 아래의 2026-11-15/2026-11-25 D 미구현 표기는 과거 기록입니다.
 
 # 상태값과 권한 기준
 
@@ -44,3 +44,18 @@
 - 본문 수정·삭제 시 CANDIDATE는 무효화하고 MATCH_INVALIDATE에 이전 데이터를 기록. REJECTED는 유지. 실패 시 신고 변경과 무효화 모두 롤백.
 - 후보 생성은 수동. 수정 후 새 후보 생성을 다시 실행.
 - D가 보관 기록을 만들기 전의 STORED는 B 관리자가 확인한 신고 상태이며 기한 관리 구현을 의미하지 않음.
+
+## D 인계·보관 상태 규칙 — 2026-11-27 1단계 적용
+
+- D health는 `operations-ready`. `handover_requests`와 `storage_records`의 모든 쓰기는 `transaction()` 안에서 신고 상태·감사 이력(`audit_logs`)·알림(`notifications`)과 함께 처리.
+- **인계 신청 허용 전이 (정방향 전용, 되돌리기 금지)**:
+  - 신청 생성: 습득 신고(`REPORTED`/`RECEIVED`/`STORED`/`MATCHED`, 거절 외 활성 인계 없음, 보관 종료 아님) → `handover_requests.status = REQUESTED`, `reports.status = HANDOVER_IN_PROGRESS`.
+  - 심사 변경: `REQUESTED → UNDER_REVIEW | APPROVED | REJECTED`, `UNDER_REVIEW → APPROVED | REJECTED`.
+  - 거절(`REJECTED`) 시 감사 이력(`HANDOVER_CREATE`)에 기록된 신청 직전 신고 상태로 복원하여 이후 재신청 가능.
+  - 실물 인계 완료: `APPROVED → COMPLETED` 전용 API에서만 처리. `recipient_name`·`completed_at` 기록과 함께 `reports.status = HANDED_OVER`, 보관 기록이 있으면 `storage_records.status = HANDED_OVER`로 동시 갱신.
+- **보관·기한·폐기·이관 규칙**:
+  - 보관 접수: `FOUND` 신고(`REPORTED`/`RECEIVED`/`STORED`/`MATCHED`/`HANDOVER_IN_PROGRESS`)당 1건. `storage_records.status = STORED`로 생성하며 `reports.status`가 `REPORTED`/`RECEIVED`인 경우에만 `STORED`로 전이(기존 `MATCHED`/`HANDOVER_IN_PROGRESS` 유지).
+  - 보관 기한 분류: `STORED` 상태만 `NORMAL` / `EXPIRING_SOON`(기본 7일 이내) / `EXPIRED`(기한 경과)로 분류. 종료 상태(`HANDED_OVER`/`DISPOSED`/`TRANSFERRED`)는 `CLOSED`.
+  - 보관 수정: `STORED` 상태의 `storage_records.storage_place`, `storage_deadline`만 수정하며 B의 `reports` 핵심 필드는 변경하지 않음.
+  - 폐기·이관: `STORED → DISPOSED | TRANSFERRED`만 허용. 거절 외 인계 신청(`HANDOVER_CONFLICT`) 또는 확정 매칭(`MATCH_CONFLICT`)이 있으면 차단하며, 일반 매칭 후보는 C의 `invalidateReportCandidates()`로 무효화 후 `storage_records`와 `reports`를 동시 갱신.
+  - 보관 감사 이력은 기존 `audit_logs.target_type` 제약(`REPORT`/`HANDOVER`/`MATCH`/`USER`)을 유지해 `target_type = 'REPORT'`, `target_id = found_report_id`로 기록하고 `detail_json`에 `storageId`를 포함.

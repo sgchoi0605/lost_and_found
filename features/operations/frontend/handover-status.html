@@ -1,50 +1,60 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내 인계 신청 현황 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/operations.css" />
+  </head>
+  <body class="ops-page">
+    <header class="ops-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>내 인계 신청 현황</small></span>
+      </a>
+      <nav class="ops-nav" aria-label="사용자 메뉴">
+        <a href="/features/discovery/frontend/index.html">홈</a>
+        <a href="/features/reports/frontend/my-reports.html">내 신고 내역</a>
+        <a href="./handover-status.html" aria-current="page">내 인계 현황</a>
+        <a href="/features/discovery/frontend/search.html?reportType=FOUND">습득물 검색</a>
+      </nav>
+    </header>
 
-    <title>인계 신청 현황</title>
+    <main class="ops-main ops-main-narrow" hidden>
+      <div class="ops-title">
+        <span class="eyebrow">MY HANDOVERS</span>
+        <h1>인계 신청 현황</h1>
+        <p>내가 신청한 습득물 인계 요청의 심사 및 수령 완료 상태를 확인할 수 있습니다.</p>
+      </div>
 
-    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
-    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
-    <link rel="stylesheet" href="./css/operations.css">
+      <section class="ops-card">
+        <div class="ops-filters">
+          <select id="status-filter" aria-label="인계 상태 필터">
+            <option value="all">전체 상태</option>
+            <option value="REQUESTED">신청 접수</option>
+            <option value="UNDER_REVIEW">검토 중</option>
+            <option value="APPROVED">승인됨</option>
+            <option value="REJECTED">거절됨</option>
+            <option value="COMPLETED">인계 완료</option>
+          </select>
+          <button type="button" id="refresh-button" class="btn btn-secondary">새로고침</button>
+        </div>
 
-    <script type="module" src="./js/handover-status.js"></script>
-</head>
+        <p id="status-message" class="ops-message" role="status" aria-live="polite"></p>
+        <div id="handover-list" class="ops-card-list"></div>
+        <p id="empty-message" class="ops-empty" hidden>신청한 인계 내역이 없습니다.</p>
 
-<body>
-
-    <main class="form-card">
-
-        <header>
-            <h1>인계 신청 현황</h1>
-            <p>내가 신청한 물품 인계 요청의 진행 상황을 확인할 수 있습니다.</p>
-        </header>
-
-        <section class="detail-card">
-            <h2>신청 내역</h2>
-
-            <div id="handover-list">
-                <!-- JavaScript에서 신청 내역 표시 -->
-            </div>
-
-            <p
-                id="empty-message"
-                role="status"
-                aria-live="polite"
-                hidden
-            >
-                신청한 인계 내역이 없습니다.
-            </p>
-        </section>
-
-        <a class="back-link" href="../../discovery/frontend/index.html">
-            메인으로 돌아가기
-        </a>
-
+        <nav id="pagination" class="ops-pagination" aria-label="페이지 이동" hidden>
+          <button type="button" id="prev-button" class="btn btn-secondary">이전</button>
+          <span id="page-info">1 / 1</span>
+          <button type="button" id="next-button" class="btn btn-secondary">다음</button>
+        </nav>
+      </section>
     </main>
 
-</body>
+    <script type="module" src="./js/handover-status.js"></script>
+  </body>
 </html>

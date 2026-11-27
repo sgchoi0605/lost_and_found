@@ -161,3 +161,152 @@ test('v2 migration preserves records, separates legacy storage place and is repe
     assert.equal(db.prepare('PRAGMA user_version').get().user_version, 3);
   } finally { db.close(); }
 });
+
+test('ABCD E2E: signup -> reports -> search/match -> handover complete & storage dispose -> notifications & stats', async (t) => {
+  const f = await fixture(t);
+  const { lost, found, match } = await f.pair();
+
+  // 두 번째 습득물(폐기 대상) 등록
+  const expiredFound = await f.create('FOUND', {
+    itemName: '초록 우산',
+    category: '우산',
+    place: '학생회관',
+    storagePlace: '관리실',
+  });
+
+  // C: 검색 및 매칭 확정
+  const search = await f.request('/api/discovery/reports?q=' + encodeURIComponent('지갑'));
+  assert.equal(search.status, 200);
+  assert.equal(search.body.data.total, 2);
+  assert.equal((await f.review(match.match_id, 'CONFIRM')).status, 200);
+
+  // D: 두 습득물 보관 접수 (매칭된 물품은 MATCHED 유지, 미매칭 물품은 STORED)
+  const stMatched = await f.request(
+    '/api/operations/admin/storage',
+    'POST',
+    { foundReportId: found.report_id },
+    f.admin.cookie,
+  );
+  assert.equal(stMatched.status, 201);
+  assert.equal(
+    f.db.prepare('SELECT status FROM reports WHERE report_id = ?').get(found.report_id).status,
+    'MATCHED',
+  );
+
+  const stExpired = await f.request(
+    '/api/operations/admin/storage',
+    'POST',
+    {
+      foundReportId: expiredFound.report_id,
+      storedAt: '2026-01-01T00:00:00.000Z',
+      storageDeadline: '2026-06-01T00:00:00.000Z',
+    },
+    f.admin.cookie,
+  );
+  assert.equal(stExpired.status, 201);
+
+  // D: 인계 신청 -> 진행 중에는 C 매칭 해제 차단 (409 HANDOVER_CONFLICT)
+  const handover = await f.request(
+    '/api/operations/handovers',
+    'POST',
+    {
+      foundReportId: found.report_id,
+      lostReportId: lost.report_id,
+      contact: '010-9999-8888',
+      ownershipProof: '지갑 안쪽 이니셜 각인',
+    },
+    f.owner.cookie,
+  );
+  assert.equal(handover.status, 201);
+  const blockedRelease = await f.review(match.match_id, 'RELEASE');
+  assert.equal(blockedRelease.status, 409);
+  assert.equal(blockedRelease.body.error.code, 'HANDOVER_CONFLICT');
+
+  // D: 관리자 검토 -> 승인 -> 실물 인계 완료
+  const requestId = handover.body.data.request_id;
+  assert.equal(
+    (
+      await f.request(
+        `/api/operations/admin/handovers/${requestId}/status`,
+        'PATCH',
+        { status: 'UNDER_REVIEW' },
+        f.admin.cookie,
+      )
+    ).status,
+    200,
+  );
+  assert.equal(
+    (
+      await f.request(
+        `/api/operations/admin/handovers/${requestId}/status`,
+        'PATCH',
+        { status: 'APPROVED', reviewNote: '본인 확인' },
+        f.admin.cookie,
+      )
+    ).status,
+    200,
+  );
+  const completed = await f.request(
+    `/api/operations/admin/handovers/${requestId}/complete`,
+    'POST',
+    { recipientName: '소유자' },
+    f.admin.cookie,
+  );
+  assert.equal(completed.status, 200);
+  assert.equal(
+    f.db.prepare('SELECT status FROM reports WHERE report_id = ?').get(found.report_id).status,
+    'HANDED_OVER',
+  );
+  assert.equal(
+    f.db.prepare('SELECT status FROM reports WHERE report_id = ?').get(lost.report_id).status,
+    'HANDED_OVER',
+  );
+  assert.equal(
+    f.db
+      .prepare('SELECT status FROM storage_records WHERE storage_id = ?')
+      .get(stMatched.body.data.storage_id).status,
+    'HANDED_OVER',
+  );
+
+  // D: 만료 물품 기한 점검(EXPIRY 알림) 및 폐기 처리
+  const retention = await f.request(
+    '/api/operations/admin/storage/check-retention',
+    'POST',
+    { withinDays: 7 },
+    f.admin.cookie,
+  );
+  assert.equal(retention.status, 200);
+  assert.equal(retention.body.data.expiredCount, 1);
+  assert.equal(retention.body.data.notifiedCount, 1);
+
+  const disposed = await f.request(
+    `/api/operations/admin/storage/${stExpired.body.data.storage_id}/dispose`,
+    'POST',
+    { status: 'DISPOSED', dispositionNote: '보관 기한 만료 폐기' },
+    f.admin.cookie,
+  );
+  assert.equal(disposed.status, 200);
+  assert.equal(
+    f.db.prepare('SELECT status FROM reports WHERE report_id = ?').get(expiredFound.report_id)
+      .status,
+    'DISPOSED',
+  );
+
+  // A: 알림(MATCH, HANDOVER, EXPIRY) 수신 확인
+  const ownerNotifs = await f.request('/api/account/notifications', 'GET', undefined, f.owner.cookie);
+  const ownerTypes = new Set(ownerNotifs.body.data.items.map((n) => n.type));
+  assert.ok(ownerTypes.has('MATCH'));
+  assert.ok(ownerTypes.has('HANDOVER'));
+
+  const adminNotifs = await f.request('/api/account/notifications', 'GET', undefined, f.admin.cookie);
+  assert.ok(adminNotifs.body.data.items.some((n) => n.type === 'EXPIRY'));
+
+  // C: 관리자 통계 인계 완료율(습득물 2건 중 1건 완료 = 50%) 및 인계 집계 반영 확인
+  const stats = await f.request('/api/discovery/admin/stats', 'GET', undefined, f.admin.cookie);
+  assert.equal(stats.status, 200);
+  assert.equal(stats.body.data.summary.foundReports, 2);
+  assert.equal(stats.body.data.summary.completedFoundReports, 1);
+  assert.equal(stats.body.data.summary.handoverCompletionRate, 50);
+  assert.equal(stats.body.data.summary.pendingReports, 0);
+  assert.equal(stats.body.data.handover.completed, 1);
+});

@@ -319,34 +319,27 @@ function renderAdminMenu() {
     const description = createElement(
         'p',
         '',
-        '매칭 검토 및 전체 신고 현황을 관리합니다.'
+        '사용자·신고·매칭·인계·보관·통계를 관리합니다.'
     );
 
     links.appendChild(description);
 
-    const matchLink = createElement(
-        'a',
-        'btn btn-secondary full',
-        '매칭 관리 →'
-    );
+    const adminPages = [
+        ['사용자 관리 →', '/features/account/frontend/admin-users.html'],
+        ['신고 관리 →', '/features/reports/frontend/admin-reports.html'],
+        ['매칭 관리 →', '/features/discovery/frontend/admin-matches.html'],
+        ['인계 신청 관리 →', '/features/operations/frontend/admin-handovers.html'],
+        ['보관·폐기 관리 →', '/features/operations/frontend/admin-storage.html'],
+        ['통계 대시보드 →', '/features/discovery/frontend/admin-stats.html']
+    ];
 
-    matchLink.href = './admin-matches.html';
-
-    const statsLink = createElement(
-        'a',
-        'btn btn-secondary full',
-        '통계 대시보드 →'
-    );
-
-    statsLink.href = './admin-stats.html';
-
-    const matchRow = createElement('p');
-    matchRow.appendChild(matchLink);
-
-    const statsRow = createElement('p');
-    statsRow.appendChild(statsLink);
-
-    links.append(matchRow, statsRow);
+    for (const [label, href] of adminPages) {
+        const anchor = createElement('a', 'btn btn-secondary full', label);
+        anchor.href = href;
+        const row = createElement('p');
+        row.appendChild(anchor);
+        links.appendChild(row);
+    }
 
     menu.appendChild(links);
 
@@ -386,6 +379,23 @@ async function loadCurrentUser() {
         myReportsLink.href =
             '/features/reports/frontend/my-reports.html';
 
+        let handoverStatusLink =
+            document.getElementById('myHandoversLink');
+
+        if (!handoverStatusLink) {
+            handoverStatusLink = createElement(
+                'a',
+                '',
+                '내 인계 신청 현황 →'
+            );
+            handoverStatusLink.id = 'myHandoversLink';
+            handoverStatusLink.href =
+                '/features/operations/frontend/handover-status.html';
+            const row = createElement('p');
+            row.appendChild(handoverStatusLink);
+            myReportsLink.parentElement.appendChild(row);
+        }
+
         // 관리자 권한에 따른 메뉴 표시
         renderAdminMenu();
 
@@ -395,6 +405,8 @@ async function loadCurrentUser() {
     } catch (error) {
 
         currentUser = null;
+
+        document.getElementById('myHandoversLink')?.parentElement?.remove();
 
         renderAdminMenu();
 

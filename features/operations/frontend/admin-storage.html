@@ -1,93 +1,208 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>관리자 보관·폐기 관리 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/operations.css" />
+  </head>
+  <body class="ops-page">
+    <header class="ops-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>관리자 보관·폐기 관리</small></span>
+      </a>
+      <nav class="ops-nav" aria-label="관리자 메뉴">
+        <a href="/features/discovery/frontend/index.html">홈</a>
+        <a href="/features/account/frontend/admin-users.html">사용자 관리</a>
+        <a href="/features/reports/frontend/admin-reports.html">신고 관리</a>
+        <a href="/features/discovery/frontend/admin-matches.html">매칭 관리</a>
+        <a href="./admin-handovers.html">인계 관리</a>
+        <a href="./admin-storage.html" aria-current="page">보관 관리</a>
+        <a href="/features/discovery/frontend/admin-stats.html">통계</a>
+      </nav>
+    </header>
 
-    <title>보관 관리</title>
+    <main class="ops-main" hidden>
+      <div class="ops-title">
+        <span class="eyebrow">ADMIN STORAGE &amp; RETENTION</span>
+        <h1>보관·폐기 관리</h1>
+        <p>습득물의 보관 접수, 보관 기한(임박·초과) 점검 및 폐기·이관 처리를 관리합니다.</p>
+      </div>
 
-    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
-    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
-    <link rel="stylesheet" href="./css/operations.css">
+      <section class="ops-summary-grid" aria-label="보관 현황 통계">
+        <article class="ops-summary-card">
+          <h3>전체 보관 기록</h3>
+          <strong id="total-count">0</strong>
+        </article>
+        <article class="ops-summary-card">
+          <h3>보관 중</h3>
+          <strong id="stored-count">0</strong>
+        </article>
+        <article class="ops-summary-card ops-summary-warn">
+          <h3>기한 임박 (7일 이내)</h3>
+          <strong id="expiring-count">0</strong>
+        </article>
+        <article class="ops-summary-card ops-summary-danger">
+          <h3>기한 초과</h3>
+          <strong id="expired-count">0</strong>
+        </article>
+        <article class="ops-summary-card ops-summary-done">
+          <h3>인계·폐기·이관 종료</h3>
+          <strong id="closed-count">0</strong>
+        </article>
+      </section>
+
+      <section class="ops-card">
+        <h2>습득물 신규 보관 접수</h2>
+        <form id="intake-form" class="ops-form">
+          <div class="ops-form-grid">
+            <div class="ops-field">
+              <label for="candidate-select">미등록 습득물 선택</label>
+              <select id="candidate-select" required>
+                <option value="">습득물을 선택하세요</option>
+              </select>
+            </div>
+            <div class="ops-field">
+              <label for="intake-place">보관 장소</label>
+              <input
+                type="text"
+                id="intake-place"
+                maxlength="200"
+                placeholder="보관 장소를 입력하세요"
+                required
+              />
+            </div>
+            <div class="ops-field">
+              <label for="intake-days">보관 기간 (일, 기본 180일)</label>
+              <input type="number" id="intake-days" min="1" max="3650" value="180" />
+            </div>
+            <div class="ops-field">
+              <label for="intake-deadline">보관 기한 직접 지정 (선택)</label>
+              <input type="date" id="intake-deadline" />
+            </div>
+          </div>
+
+          <div class="ops-actions">
+            <button type="submit" id="intake-submit" class="btn btn-primary">보관 접수 등록</button>
+            <button type="button" id="check-retention-button" class="btn btn-secondary">
+              기한 임박·초과 점검 및 알림 발송
+            </button>
+          </div>
+
+          <p id="intake-message" class="ops-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="action-panel" class="ops-card ops-panel-highlight" hidden>
+        <h2 id="action-panel-title">보관 물품 처리</h2>
+        <p id="action-panel-target" class="ops-message"></p>
+
+        <form id="edit-storage-form" class="ops-form" hidden>
+          <div class="ops-form-grid">
+            <div class="ops-field">
+              <label for="edit-storage-place">보관 장소</label>
+              <input type="text" id="edit-storage-place" maxlength="200" required />
+            </div>
+            <div class="ops-field">
+              <label for="edit-storage-deadline">보관 기한</label>
+              <input type="date" id="edit-storage-deadline" required />
+            </div>
+          </div>
+          <div class="ops-actions">
+            <button type="submit" class="btn btn-primary">보관 정보 저장</button>
+            <button type="button" id="cancel-edit-button" class="btn btn-secondary">취소</button>
+          </div>
+        </form>
+
+        <form id="dispose-storage-form" class="ops-form" hidden>
+          <div class="ops-form-grid">
+            <div class="ops-field">
+              <label for="dispose-status">종료 처리 유형</label>
+              <select id="dispose-status" required>
+                <option value="DISPOSED">폐기 (DISPOSED)</option>
+                <option value="TRANSFERRED">이관 (TRANSFERRED)</option>
+              </select>
+            </div>
+            <div class="ops-field">
+              <label for="dispose-note">폐기·이관 사유 (필수)</label>
+              <input
+                type="text"
+                id="dispose-note"
+                maxlength="500"
+                placeholder="예: 보관 기한 180일 경과로 자체 폐기 / 관할 경찰서 이관"
+                required
+              />
+            </div>
+          </div>
+          <div class="ops-actions">
+            <button type="submit" class="btn ops-btn-danger">폐기·이관 확정</button>
+            <button type="button" id="cancel-dispose-button" class="btn btn-secondary">취소</button>
+          </div>
+        </form>
+
+        <p id="action-panel-message" class="ops-message" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="ops-card">
+        <h2>보관 물품 목록</h2>
+
+        <form id="storage-filter-form" class="ops-filters">
+          <input
+            type="search"
+            id="search-input"
+            placeholder="물품명 또는 보관 장소 검색"
+            aria-label="물품명 또는 보관 장소 검색"
+            maxlength="100"
+          />
+          <select id="status-filter" aria-label="보관 상태 필터">
+            <option value="all">전체 상태</option>
+            <option value="STORED">보관 중</option>
+            <option value="HANDED_OVER">인계 완료</option>
+            <option value="DISPOSED">폐기</option>
+            <option value="TRANSFERRED">이관</option>
+          </select>
+          <select id="retention-filter" aria-label="보관 기한 필터">
+            <option value="all">전체 기한</option>
+            <option value="NORMAL">정상</option>
+            <option value="EXPIRING_SOON">기한 임박</option>
+            <option value="EXPIRED">기한 초과</option>
+          </select>
+          <button type="submit" class="btn btn-primary">조회</button>
+        </form>
+
+        <p id="storage-message" class="ops-message" role="status" aria-live="polite"></p>
+
+        <div class="ops-table-wrap">
+          <table class="ops-table">
+            <thead>
+              <tr>
+                <th scope="col">물품명</th>
+                <th scope="col">보관 장소</th>
+                <th scope="col">보관 시작일</th>
+                <th scope="col">보관 기한</th>
+                <th scope="col">기한 상태</th>
+                <th scope="col">보관 상태</th>
+                <th scope="col">처리</th>
+              </tr>
+            </thead>
+            <tbody id="storage-table-body"></tbody>
+          </table>
+        </div>
+
+        <p id="empty-message" class="ops-empty" hidden>조건에 해당하는 보관 물품이 없습니다.</p>
+
+        <nav id="pagination" class="ops-pagination" aria-label="페이지 이동" hidden>
+          <button type="button" id="prev-button" class="btn btn-secondary">이전</button>
+          <span id="page-info">1 / 1</span>
+          <button type="button" id="next-button" class="btn btn-secondary">다음</button>
+        </nav>
+      </section>
+    </main>
 
     <script type="module" src="./js/admin-storage.js"></script>
-</head>
-
-<body>
-    <main class="storage-container">
-
-        <header class="page-header">
-            <h1>보관 관리</h1>
-            <p>습득물의 보관 현황을 확인하고 관리합니다.</p>
-        </header>
-
-        <!-- 보관 현황 통계 -->
-        <section class="storage-summary">
-            <div class="summary-card">
-                <h3>전체 보관 물품</h3>
-                <p id="total-count">0</p>
-            </div>
-
-            <div class="summary-card">
-                <h3>보관 중</h3>
-                <p id="stored-count">0</p>
-            </div>
-
-            <div class="summary-card">
-                <h3>인계 대기</h3>
-                <p id="pending-count">0</p>
-            </div>
-        </section>
-
-        <!-- 보관 물품 목록 -->
-        <section class="storage-list">
-
-            <h2>보관 물품 목록</h2>
-
-            <!-- 검색 및 상태 필터 -->
-            <div class="storage-filters">
-                <input
-                    type="search"
-                    id="search-input"
-                    placeholder="물품 이름 검색"
-                    aria-label="물품 이름 검색"
-                >
-
-                <select
-                    id="status-filter"
-                    aria-label="보관 상태 필터"
-                >
-                    <option value="all">전체 상태</option>
-                    <option value="보관 중">보관 중</option>
-                    <option value="인계 대기">인계 대기</option>
-                    <option value="인계 완료">인계 완료</option>
-                </select>
-            </div>
-
-            <!-- 보관 물품 테이블 -->
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">물품명</th>
-                            <th scope="col">습득 날짜</th>
-                            <th scope="col">보관 장소</th>
-                            <th scope="col">보관 상태</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="storage-table-body"></tbody>
-                </table>
-            </div>
-
-            <!-- 등록된 물품이 없을 때 -->
-            <p id="empty-message" hidden>
-                등록된 보관 물품이 없습니다.
-            </p>
-
-        </section>
-
-    </main>
-</body>
+  </body>
 </html>

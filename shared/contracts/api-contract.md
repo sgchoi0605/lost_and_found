@@ -1,4 +1,4 @@
- > 2026-11-25 ABC 통합판: A/B/C 구현 및 DB v3 반영. D는 미구현입니다. 현재 통합 정책은 docs/ABC_통합결과.md와 각 계약 문서의 ABC 추가 내용을 우선합니다. 아래의 2026-11-15 미구현 표기는 당시 기록입니다.
+ > 2026-11-27 ABCD 통합 진행(1단계 완료): A/B/C 구현 + D 백엔드(`/api/operations`) 구현 및 DB v3 반영. D 프론트엔드 연동은 2단계 예정입니다. 아래의 2026-11-15/2026-11-25 D 미구현 표기는 과거 기록입니다.
 
 # API 계약 — A 계정·공통 기반
 
@@ -147,4 +147,29 @@ A API는 위 계약을 유지합니다. B/C는 아래 업무 API가 구현되어
 
 후보 생성은 수동 실행입니다. B 수정·삭제 시 C의 invalidateReportCandidates(db, reportId, actorId)를 같은 트랜잭션에서 호출합니다. C의 검색·상세·매칭 서비스는 호출자로부터 db를 받으며 자체 연결을 열지 않습니다. 관리자 거절은 유지하고, 일반 후보 무효화는 감사 이력에 남깁니다.
 
-D는 /health만 구현되어 있으며 인계 신청·폐기 API는 제공하지 않습니다.
+### D: /api/operations (2026-11-27 1단계 구현 기준)
+
+| 메서드 | 경로 | 권한 / 내용 |
+|---|---|---|
+| GET | /health | 공개, `stage=operations-ready` |
+| POST | /handovers | 로그인, 습득물 인계 신청 (HTTP 201) |
+| GET | /handovers/mine | 로그인, 본인 인계 신청 목록 (`status?`, `page`, `limit`) |
+| GET | /admin/handovers | 관리자, 전체 인계 신청 목록·상태별 집계 (`q?`, `status?`, `page`, `limit`) |
+| GET | /admin/handovers/:id | 관리자, 인계 신청 단건 상세 (습득물·분실물·신청자·보관 기록 포함) |
+| PATCH | /admin/handovers/:id/status | 관리자, 심사 상태 변경 (`{status: UNDER_REVIEW \| APPROVED \| REJECTED, reviewNote?}`) |
+| POST | /admin/handovers/:id/complete | 관리자, 실물 인계 완료 (`{recipientName, completedAt?}`) |
+| GET | /admin/storage | 관리자, 보관 물품 목록·집계 (`q?`, `status?`, `retention?`, `withinDays?`, `page`, `limit`) |
+| GET | /admin/storage/candidates | 관리자, 보관 기록 미등록 습득 신고 목록 (`q?`, `page`, `limit`) |
+| POST | /admin/storage | 관리자, 습득물 보관 접수 등록 (HTTP 201) |
+| PATCH | /admin/storage/:id | 관리자, 보관 중인 물품의 보관 장소·기한 수정 (`{storagePlace?, storageDeadline?}`) |
+| POST | /admin/storage/:id/dispose | 관리자, 보관 물품 폐기·이관 (`{status: DISPOSED \| TRANSFERRED, dispositionNote, disposedAt?}`) |
+| POST | /admin/storage/check-retention | 관리자, 보관 기한 임박·초과 점검 및 `EXPIRY` 알림 발송 (`{withinDays?}`) |
+
+- 인계 신청 입력: `{foundReportId, lostReportId?, ownershipProof, contact?}`. DB 스키마를 변경하지 않고 `contact`가 전달되면 `[연락처: ...]` 형식으로 `ownership_proof`에 함께 저장합니다.
+- 인계 상태 전이는 정방향만 허용합니다(`REQUESTED → UNDER_REVIEW/APPROVED/REJECTED`, `UNDER_REVIEW → APPROVED/REJECTED`, `APPROVED → COMPLETED`). 완료·처리 후 대기 상태 되돌리기(`resetStatus`)는 제공하지 않습니다.
+- 인계 신청 시 습득 신고(및 연결된 본인 분실 신고)는 `HANDOVER_IN_PROGRESS`로 전환되며, `REJECTED` 시 신청 직전 신고 상태로 복원합니다. `COMPLETED`는 수령인과 완료 일시를 기록하고 `handover_requests`·`reports`·`storage_records`를 한 트랜잭션으로 `COMPLETED`/`HANDED_OVER` 갱신합니다.
+- 보관 접수 입력: `{foundReportId, storagePlace?, storedAt?, storageDeadline?, retentionDays?}`. `storagePlace` 생략 시 `reports.storage_place`를 초기값으로 사용하며, `storageDeadline` 생략 시 기본 180일(`retentionDays`)로 계산합니다.
+- 보관 정보 수정(`PATCH /admin/storage/:id`)은 `storage_records`의 보관 장소·기한만 변경하며 B의 `reports` 핵심 필드를 덮어쓰지 않습니다.
+- 폐기·이관(`POST /admin/storage/:id/dispose`)은 진행 중인 인계(`HANDOVER_CONFLICT`)나 확정 매칭(`MATCH_CONFLICT`)이 있으면 409로 차단하며, 일반 매칭 후보는 C의 `invalidateReportCandidates()`로 무효화하고 `storage_records`와 `reports`를 함께 종료 상태로 갱신합니다.
+- 주요 오류: 400 `VALIDATION_ERROR`, 401 `UNAUTHENTICATED`, 403 `FORBIDDEN`, 404 `REPORT_NOT_FOUND`/`HANDOVER_NOT_FOUND`/`STORAGE_NOT_FOUND`, 409 `HANDOVER_ALREADY_EXISTS`/`STORAGE_ALREADY_EXISTS`/`INVALID_REPORT_STATUS`/`INVALID_HANDOVER_TRANSITION`/`INVALID_STORAGE_STATUS`/`HANDOVER_CONFLICT`/`MATCH_CONFLICT`/`STORAGE_CONFLICT`.
+- 인계 생성·상태 변경·완료 시 A의 `createNotification`으로 `HANDOVER` 알림을, 기한 점검 시 관리자에게 중복 없이 `EXPIRY` 알림을 생성하고 모든 변경은 `audit_logs`에 같은 트랜잭션으로 기록합니다.

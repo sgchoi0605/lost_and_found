@@ -145,11 +145,8 @@ async function loadReport() {
         ) {
             handoverLink.href =
                 `/features/operations/frontend/handover-apply.html?foundReportId=${reportId}`;
-
-            handoverLink.hidden = true;
-            const note = document.createElement('p');
-            note.textContent = '인계 신청 기능은 준비 중입니다.';
-            handoverLink.after(note);
+            handoverLink.className = 'btn btn-primary';
+            handoverLink.hidden = false;
         }
 
         message.textContent = '';

@@ -1,82 +1,124 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>습득물 인계 신청 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/operations.css" />
+  </head>
+  <body class="ops-page">
+    <header class="ops-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>습득물 인계 신청</small></span>
+      </a>
+      <nav class="ops-nav" aria-label="인계 메뉴">
+        <a href="/features/discovery/frontend/index.html">홈</a>
+        <a href="/features/discovery/frontend/search.html?reportType=FOUND">습득물 검색</a>
+        <a href="./handover-status.html">내 인계 현황</a>
+      </nav>
+    </header>
 
-    <title>인계 신청</title>
-
-    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
-    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
-    <link rel="stylesheet" href="./css/operations.css">
-
-    <script type="module" src="./js/handover-apply.js"></script>
-</head>
-
-<body>
-    <main class="form-card">
-
+    <main class="ops-main ops-main-narrow" hidden>
+      <div class="ops-title">
+        <span class="eyebrow">HANDOVER APPLICATION</span>
         <h1>습득물 인계 신청</h1>
+        <p>선택한 습득물에 대해 본인 소유임을 확인할 수 있는 특징을 입력해 신청합니다.</p>
+      </div>
 
-        <p>분실한 물품을 찾아 인계 신청을 진행합니다.</p>
+      <section class="ops-card">
+        <p id="page-message" class="ops-message" role="status" aria-live="polite"></p>
 
-        <form id="handover-form">
+        <div id="found-item-box" class="ops-item-box" hidden>
+          <h2>신청 대상 습득물</h2>
+          <div class="ops-detail-list">
+            <div class="ops-detail-row">
+              <span>물품명</span>
+              <strong id="found-item-name"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>카테고리</span>
+              <strong id="found-item-category"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>습득 장소</span>
+              <strong id="found-item-place"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>습득 일시</span>
+              <strong id="found-item-occurred"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>신고 보관 장소</span>
+              <strong id="found-item-storage"></strong>
+            </div>
+            <div class="ops-detail-row">
+              <span>현재 상태</span>
+              <strong id="found-item-status"></strong>
+            </div>
+          </div>
+        </div>
 
-            <label for="item-name">물품명</label>
+        <form id="handover-form" class="ops-form" hidden>
+          <div class="ops-field">
+            <label for="applicant-display">신청자 (로그인 계정)</label>
+            <input type="text" id="applicant-display" readonly />
+          </div>
+
+          <div class="ops-field">
+            <label for="lost-report-select">연결할 내 분실 신고 (선택)</label>
+            <select id="lost-report-select" name="lostReportId">
+              <option value="">연결하지 않음</option>
+            </select>
+            <small>본인이 등록한 진행 중 분실 신고가 있다면 함께 연결할 수 있습니다.</small>
+          </div>
+
+          <div class="ops-field">
+            <label for="contact-input">연락처 (선택)</label>
             <input
-                type="text"
-                id="item-name"
-                name="itemName"
-                placeholder="물품명을 입력하세요"
-                maxlength="100"
-                required
-            >
+              type="tel"
+              id="contact-input"
+              name="contact"
+              placeholder="예: 010-1234-5678"
+              autocomplete="tel"
+              maxlength="50"
+            />
+            <small>입력한 연락처는 소유 증명 내용에 함께 저장되어 관리자 확인에 사용됩니다.</small>
+          </div>
 
-            <label for="applicant-name">신청자 이름</label>
-            <input
-                type="text"
-                id="applicant-name"
-                name="applicantName"
-                placeholder="이름을 입력하세요"
-                maxlength="50"
-                required
-            >
-
-            <label for="phone">연락처</label>
-            <input
-                type="tel"
-                id="phone"
-                name="phone"
-                placeholder="연락처를 입력하세요"
-                autocomplete="tel"
-                maxlength="20"
-                required
-            >
-
-            <label for="description">소유 증명 내용</label>
+          <div class="ops-field">
+            <label for="ownership-proof">소유 증명 내용 (필수)</label>
             <textarea
-                id="description"
-                name="description"
-                placeholder="물품의 특징 등 본인 소유임을 증명할 내용을 입력하세요"
-                maxlength="1000"
-                required
+              id="ownership-proof"
+              name="ownershipProof"
+              placeholder="물품 내부 구성품, 흠집 위치, 배경화면 등 본인만 알 수 있는 특징을 자세히 입력하세요."
+              maxlength="1000"
+              required
             ></textarea>
+          </div>
 
-            <button type="submit">인계 신청하기</button>
+          <div class="ops-actions">
+            <button type="submit" id="submit-button" class="btn btn-primary">인계 신청하기</button>
+            <a class="btn btn-secondary" href="/features/discovery/frontend/search.html?reportType=FOUND">
+              목록으로 돌아가기
+            </a>
+          </div>
 
-            <p
-                id="result-message"
-                role="status"
-                aria-live="polite"
-            ></p>
-
+          <p id="result-message" class="ops-message" role="status" aria-live="polite"></p>
         </form>
 
-        <a class="back-link" href="../../discovery/frontend/index.html">
-            메인으로 돌아가기
-        </a>
-
+        <div id="fallback-actions" class="ops-actions" hidden>
+          <a class="btn btn-primary" href="/features/discovery/frontend/search.html?reportType=FOUND">
+            습득물 목록에서 선택하기
+          </a>
+          <a class="btn btn-secondary" href="./handover-status.html">내 인계 현황 보기</a>
+        </div>
+      </section>
     </main>
-</body>
+
+    <script type="module" src="./js/handover-apply.js"></script>
+  </body>
 </html>

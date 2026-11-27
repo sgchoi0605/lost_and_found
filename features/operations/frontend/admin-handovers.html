@@ -1,97 +1,107 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>관리자 인계 신청 관리 | LOST & FOUND</title>
+    <link rel="icon" href="/public/favicon.svg" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/base.css" />
+    <link rel="stylesheet" href="../../../shared/frontend/css/components.css" />
+    <link rel="stylesheet" href="./css/operations.css" />
+  </head>
+  <body class="ops-page">
+    <header class="ops-header">
+      <a class="logo-wrap" href="/features/discovery/frontend/index.html">
+        <span class="logo-mark">⌖</span>
+        <span><strong>LOST <i>&</i> FOUND</strong><small>관리자 인계 신청 관리</small></span>
+      </a>
+      <nav class="ops-nav" aria-label="관리자 메뉴">
+        <a href="/features/discovery/frontend/index.html">홈</a>
+        <a href="/features/account/frontend/admin-users.html">사용자 관리</a>
+        <a href="/features/reports/frontend/admin-reports.html">신고 관리</a>
+        <a href="/features/discovery/frontend/admin-matches.html">매칭 관리</a>
+        <a href="./admin-handovers.html" aria-current="page">인계 관리</a>
+        <a href="./admin-storage.html">보관 관리</a>
+        <a href="/features/discovery/frontend/admin-stats.html">통계</a>
+      </nav>
+    </header>
 
-    <title>인계 신청 관리</title>
+    <main class="ops-main" hidden>
+      <div class="ops-title">
+        <span class="eyebrow">ADMIN HANDOVERS</span>
+        <h1>인계 신청 관리</h1>
+        <p>접수된 인계 신청을 조회하고 상세 화면에서 검토·승인·거절 및 실물 인계 완료를 처리합니다.</p>
+      </div>
 
-    <link rel="stylesheet" href="../../../shared/frontend/css/base.css">
-    <link rel="stylesheet" href="../../../shared/frontend/css/components.css">
-    <link rel="stylesheet" href="./css/operations.css">
+      <section class="ops-summary-grid" aria-label="인계 신청 통계">
+        <article class="ops-summary-card">
+          <h3>전체 신청</h3>
+          <strong id="all-count">0</strong>
+        </article>
+        <article class="ops-summary-card ops-summary-warn">
+          <h3>심사 대기·검토</h3>
+          <strong id="waiting-count">0</strong>
+        </article>
+        <article class="ops-summary-card">
+          <h3>승인 (수령 대기)</h3>
+          <strong id="approved-count">0</strong>
+        </article>
+        <article class="ops-summary-card ops-summary-done">
+          <h3>인계 완료</h3>
+          <strong id="completed-count">0</strong>
+        </article>
+      </section>
+
+      <section class="ops-card">
+        <h2>인계 신청 목록</h2>
+
+        <form id="filter-form" class="ops-filters">
+          <input
+            type="search"
+            id="handover-search"
+            placeholder="물품명 또는 신청자 이름·아이디 검색"
+            aria-label="물품명 또는 신청자 검색"
+            maxlength="100"
+          />
+          <select id="handover-filter" aria-label="신청 상태 필터">
+            <option value="all">전체 상태</option>
+            <option value="REQUESTED">신청 접수</option>
+            <option value="UNDER_REVIEW">검토 중</option>
+            <option value="APPROVED">승인됨</option>
+            <option value="REJECTED">거절됨</option>
+            <option value="COMPLETED">인계 완료</option>
+          </select>
+          <button type="submit" class="btn btn-primary">조회</button>
+        </form>
+
+        <p id="list-message" class="ops-message" role="status" aria-live="polite"></p>
+
+        <div class="ops-table-wrap">
+          <table class="ops-table">
+            <thead>
+              <tr>
+                <th scope="col">신청 번호</th>
+                <th scope="col">물품명</th>
+                <th scope="col">신청자</th>
+                <th scope="col">신청 일시</th>
+                <th scope="col">신청 상태</th>
+                <th scope="col">관리</th>
+              </tr>
+            </thead>
+            <tbody id="handovers-table-body"></tbody>
+          </table>
+        </div>
+
+        <p id="handovers-empty-message" class="ops-empty" hidden>조건에 해당하는 인계 신청이 없습니다.</p>
+
+        <nav id="pagination" class="ops-pagination" aria-label="페이지 이동" hidden>
+          <button type="button" id="prev-button" class="btn btn-secondary">이전</button>
+          <span id="page-info">1 / 1</span>
+          <button type="button" id="next-button" class="btn btn-secondary">다음</button>
+        </nav>
+      </section>
+    </main>
 
     <script type="module" src="./js/admin-handovers.js"></script>
-</head>
-
-<body>
-    <main class="handovers-container">
-
-        <header class="handovers-header">
-            <h1>인계 신청 관리</h1>
-            <p>접수된 인계 신청을 확인하고 관리합니다.</p>
-        </header>
-
-        <!-- 신청 통계 -->
-        <section class="handovers-summary">
-            <div class="summary-card">
-                <h3>전체 신청</h3>
-                <p id="all-count">0</p>
-            </div>
-
-            <div class="summary-card">
-                <h3>인계 대기</h3>
-                <p id="waiting-count">0</p>
-            </div>
-
-            <div class="summary-card">
-                <h3>인계 완료</h3>
-                <p id="completed-count">0</p>
-            </div>
-        </section>
-
-        <!-- 신청 목록 -->
-        <section class="handovers-list">
-            <h2>인계 신청 목록</h2>
-
-            <!-- 검색 및 상태 필터 -->
-            <div class="handovers-filters">
-                <input
-                    type="search"
-                    id="handover-search"
-                    placeholder="물품명 또는 신청자 이름 검색"
-                    aria-label="물품명 또는 신청자 이름 검색"
-                >
-
-                <select
-                    id="handover-filter"
-                    aria-label="신청 상태 필터"
-                >
-                    <option value="all">전체 상태</option>
-                    <option value="인계 대기">인계 대기</option>
-                    <option value="인계 승인 완료">인계 승인 완료</option>
-                    <option value="신청 거절">신청 거절</option>
-                    <option value="인계 완료">인계 완료</option>
-                </select>
-            </div>
-
-            <!-- 신청 테이블 -->
-            <div class="table-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">물품명</th>
-                            <th scope="col">신청자</th>
-                            <th scope="col">신청 날짜</th>
-                            <th scope="col">신청 상태</th>
-                            <th scope="col">상세 보기</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="handovers-table-body"></tbody>
-                </table>
-            </div>
-
-            <!-- 데이터가 없을 때 -->
-            <p id="handovers-empty-message" hidden>
-                등록된 인계 신청이 없습니다.
-            </p>
-        </section>
-
-        <a class="back-link" href="../../discovery/frontend/index.html">
-            메인으로 돌아가기
-        </a>
-
-    </main>
-</body>
+  </body>
 </html>
